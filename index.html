@@ -2,19 +2,40 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>數學挑戰：合 24</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數學冒險島：合 24</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
-        <h1>合 24 遊戲</h1>
-        <div id="number-display" class="numbers">
+    <div class="adventure-map">
+        <header>
+            <div class="stat">❤️ 生命值: <span id="hp">3</span></div>
+            <div class="stat">🚩 關卡: <span id="level">1</span></div>
+        </header>
+
+        <div class="monster-area">
+            <div class="monster-sprite">👾</div>
+            <p class="dialog">「冒險者，用這四個數字湊出 24，否則別想過去！」</p>
+        </div>
+
+        <div id="number-display" class="card-container">
             </div>
-        <input type="text" id="user-input" placeholder="例如: (1+2+3)*4">
-        <button onclick="checkAnswer()">提交答案</button>
-        <p id="feedback"></p>
-        <button onclick="newGame()">換一題</button>
+
+        <div class="input-section">
+            <input type="text" id="user-input" placeholder="例如: 6*(3+3-2)">
+            <div class="button-group">
+                <button class="btn-attack" onclick="checkAnswer()">發動攻擊！</button>
+                <button class="btn-no-solution" onclick="checkNoSolution()">此題無解</button>
+            </div>
+        </div>
+
+        <p id="feedback" class="message"></p>
+        
+        <div class="controls">
+            <button class="btn-skip" onclick="newGame()">逃跑 (換題)</button>
+        </div>
     </div>
+    
     <script src="script.js"></script>
 </body>
 </html>
