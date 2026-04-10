@@ -18,10 +18,16 @@ function newGame() {
     const display = document.getElementById('number-display');
     const feedback = document.getElementById('feedback');
     const inputField = document.getElementById('user-input');
+    const nextBtn = document.getElementById('btn-next');
+    const ansDisplay = document.getElementById('correct-answer-display');
     
+    // 初始化介面
     display.innerHTML = '';
     feedback.innerText = '';
+    ansDisplay.innerText = '';
     inputField.value = '';
+    inputField.disabled = false; // 重新啟用輸入
+    if(nextBtn) nextBtn.style.display = 'none'; // 隱藏下一題按鈕
 
     // 隨機怪物
     const monsterIcon = document.getElementById('monster-icon');
@@ -47,37 +53,34 @@ function newGame() {
     });
 }
 
+// 修改：當答對或兩次答錯後，顯示「下一場戰鬥」按鈕
+function showNextButton() {
+    clearInterval(timerInterval); // 停止計時
+    const nextBtn = document.getElementById('btn-next');
+    const inputField = document.getElementById('user-input');
+    if(nextBtn) nextBtn.style.display = 'inline-block';
+    if(inputField) inputField.disabled = true; // 鎖定輸入框
+}
+
 function checkAnswer() {
     const feedback = document.getElementById('feedback');
     let rawInput = document.getElementById('user-input').value.trim();
-    
     if (!rawInput) return;
 
-    // 1. 符號標準化 (處理全形括號與乘除號)
     let processedInput = rawInput
         .replace(/（/g, '(').replace(/）/g, ')')
         .replace(/x|×|X/g, '*').replace(/÷/g, '/');
 
     try {
-        // 2. 數字比對：提取輸入的所有數字
-        let usedNums = processedInput.match(/\d+/g);
-        if (!usedNums || usedNums.length !== 4) {
+        let usedNums = (processedInput.match(/\d+/g) || []).map(Number).sort((a,b)=>a-b);
+        let goalNums = [...currentNums].sort((a, b) => a - b);
+
+        if (JSON.stringify(usedNums) !== JSON.stringify(goalNums)) {
             feedback.style.color = "#f1c40f";
             feedback.innerText = "❌ 必須使用且只使用這 4 個數字喔！";
             return;
         }
 
-        let sortedUsed = usedNums.map(Number).sort((a, b) => a - b);
-        let sortedGoal = [...currentNums].sort((a, b) => a - b);
-
-        if (JSON.stringify(sortedUsed) !== JSON.stringify(sortedGoal)) {
-            feedback.style.color = "#f1c40f";
-            feedback.innerText = "❌ 使用的數字與卡片不符！";
-            return;
-        }
-
-        // 3. 計算結果
-        // 使用 Function 代替直接 eval 稍微安全一點點
         let result = new Function(`return ${processedInput}`)();
 
         if (Math.abs(result - 24) < 1e-6) {
@@ -86,10 +89,9 @@ function checkAnswer() {
             document.getElementById('score').innerText = score;
             feedback.style.color = "#2ecc71";
             feedback.innerText = `💥 完美的一擊！結果是 24！(+${10 + timeLeft}分)`;
-            clearInterval(timerInterval);
             level++;
             document.getElementById('level').innerText = level;
-            setTimeout(newGame, 1500);
+            showNextButton(); // 顯示手動進入下一題按鈕
         } else {
             handleWrongAnswer(`計算結果是 ${result}`);
         }
@@ -101,6 +103,8 @@ function checkAnswer() {
 
 function handleWrongAnswer(msg) {
     const feedback = document.getElementById('feedback');
+    const ansDisplay = document.getElementById('correct-answer-display');
+
     if (retryCount < 1) {
         retryCount++;
         feedback.style.color = "#f1c40f";
@@ -109,10 +113,60 @@ function handleWrongAnswer(msg) {
         triggerEffect('flash');
         feedback.style.color = "#e74c3c";
         feedback.innerText = `❌ ${msg}，挑戰失敗！`;
+        
+        // 1. 顯示正確答案
+        const solution = solve24(currentNums);
+        ansDisplay.innerText = solution ? `💡 正確答案參考：${solution}` : "💡 這題經鑑定真的無解！";
+        
         reduceHP();
     }
 }
 
+// 輔助函式：尋找一個可行解
+function solve24(nums) {
+    const ops = ['+', '-', '*', '/'];
+    const generate = (arr) => {
+        if (arr.length === 1) {
+            if (Math.abs(arr[0].val - 24) < 1e-6) return arr[0].str;
+            return null;
+        }
+        for (let i = 0; i < arr.length; i++) {
+            for (let j = 0; j < arr.length; j++) {
+                if (i === j) continue;
+                let nextArr = arr.filter((_, idx) => idx !== i && idx !== j);
+                let a = arr[i], b = arr[j];
+                let results = [
+                    { val: a.val + b.val, str: `(${a.str}+${b.str})` },
+                    { val: a.val - b.val, str: `(${a.str}-${b.str})` },
+                    { val: a.val * b.val, str: `(${a.str}*${b.str})` }
+                ];
+                if (b.val !== 0) results.push({ val: a.val / b.val, str: `(${a.str}/${b.str})` });
+                
+                for (let res of results) {
+                    let final = generate([...nextArr, res]);
+                    if (final) return final;
+                }
+            }
+        }
+        return null;
+    };
+    return generate(nums.map(n => ({ val: n, str: n.toString() })));
+}
+
+function reduceHP() {
+    hp--;
+    document.getElementById('hp').innerText = hp;
+    if (hp <= 0) {
+        alert(`💀 冒險結束！得分：${score}`);
+        hp = 3; level = 1; score = 0;
+        document.getElementById('score').innerText = score;
+        newGame();
+    } else {
+        showNextButton(); // 失敗後也顯示手動跳下一題
+    }
+}
+
+// 其餘功能 (checkNoSolution, triggerEffect, startTimer, canSolve...) 保留不變
 function checkNoSolution() {
     if (!canSolve(currentNums)) {
         triggerEffect('shake');
@@ -120,10 +174,9 @@ function checkNoSolution() {
         document.getElementById('score').innerText = score;
         document.getElementById('feedback').style.color = "#2ecc71";
         document.getElementById('feedback').innerText = "🎯 洞察正確！這題真的無解。";
-        clearInterval(timerInterval);
         level++;
         document.getElementById('level').innerText = level;
-        setTimeout(newGame, 1500);
+        showNextButton();
     } else {
         handleWrongAnswer("這題其實是有解的喔！");
     }
@@ -144,6 +197,7 @@ function startTimer() {
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             triggerEffect('flash');
+            document.getElementById('feedback').innerText = "⏰ 時間到！";
             reduceHP();
         }
     }, 1000);
@@ -154,19 +208,6 @@ function updateTimerDisplay() {
     if (timerEl) {
         timerEl.innerText = timeLeft;
         timerEl.style.color = timeLeft <= 10 ? "#e74c3c" : "#fff";
-    }
-}
-
-function reduceHP() {
-    hp--;
-    document.getElementById('hp').innerText = hp;
-    if (hp <= 0) {
-        alert(`💀 冒險結束！得分：${score}`);
-        hp = 3; level = 1; score = 0;
-        document.getElementById('score').innerText = score;
-        newGame();
-    } else {
-        setTimeout(newGame, 1500);
     }
 }
 
