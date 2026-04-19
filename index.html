@@ -17,7 +17,6 @@
 
         <div class="monster-area" id="monster-box">
             <div id="monster-icon" class="monster-sprite">👾</div>
-            <p class="dialog" id="monster-dialog">「冒險者，用這四個數字湊出 24，否則別想過去！」</p>
         </div>
 
         <div id="number-display" class="card-container"></div>
@@ -48,7 +47,7 @@
         <p id="feedback" class="message"></p>
         
         <div class="controls">
-            <button id="btn-next" class="btn-attack" style="display: none; background: #27ae60; box-shadow: 0 5px 0 #1e8449; margin-bottom: 10px;" onclick="newGame()">進入下一場戰鬥！</button>
+            <button id="btn-next" class="btn-attack" style="display: none; background: #27ae60; margin-bottom: 10px;" onclick="newGame()">進入下一場戰鬥！</button>
             <br>
             <button class="btn-skip" onclick="newGame()">逃跑 (換題)</button>
         </div>
@@ -64,7 +63,7 @@
             <p style="font-size: 0.9rem; color: #bdc3c7;">根據典籍記載，以下是可行的路徑：</p>
             <div id="all-solutions-list" class="solutions-list">
                 </div>
-            <div class="close-btn" onclick="closeModal()">繼續冒險</div>
+            <button class="close-btn" onclick="closeModal()">繼續冒險</button>
         </div>
     </div>
     
