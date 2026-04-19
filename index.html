@@ -46,7 +46,6 @@
         </div>
 
         <p id="feedback" class="message"></p>
-        <p id="correct-answer-display" style="color: #f1c40f; font-weight: bold; min-height: 1.5em; margin: 10px 0;"></p>
         
         <div class="controls">
             <button id="btn-next" class="btn-attack" style="display: none; background: #27ae60; box-shadow: 0 5px 0 #1e8449; margin-bottom: 10px;" onclick="newGame()">進入下一場戰鬥！</button>
@@ -57,6 +56,16 @@
         <p style="font-size: 0.8rem; color: #bdc3c7; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
             提示：使用畫面按鈕進行運算。勇者，挑戰 24 吧！
         </p>
+    </div>
+
+    <div id="solution-modal" class="modal">
+        <div class="modal-content">
+            <h3>📜 所有的計法參考</h3>
+            <p style="font-size: 0.9rem; color: #bdc3c7;">根據典籍記載，以下是可行的路徑：</p>
+            <div id="all-solutions-list" class="solutions-list">
+                </div>
+            <div class="close-btn" onclick="closeModal()">繼續冒險</div>
+        </div>
     </div>
     
     <script src="script.js"></script>
