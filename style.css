@@ -159,27 +159,47 @@ input {
     background-color: #ecf0f1;
     color: #2c3e50;
     outline: none;
-    margin-bottom: 15px;
+    margin-bottom: 5px; /* 縮小輸入框下方的間距 */
     box-sizing: border-box;
 }
 
+/* 按鈕群組容器 */
 .button-group {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-top: 15px;
+    gap: 12px;       /* 兩個按鈕之間的左右間距 */
+    margin-top: 5px; /* 收窄與上方輸入框/回饋文字的距離 */
 }
 
+/* 加大攻擊與無解按鈕 */
 .button-group button {
-    height: 50px;
-    padding: 0 24px;
-    font-size: 1.1rem;
+    height: 60px;    /* 從 50px 加大到 60px */
+    padding: 0 30px; /* 增加左右內距 */
+    font-size: 1.3rem; /* 字體加大 */
+    flex: 1;         /* 讓兩個按鈕平分寬度，看起來更大氣 */
+    max-width: 180px; 
 }
 
-.btn-attack { background: #e74c3c; color: white; }
-.btn-no-solution { background: #9b59b6; color: white; }
-.btn-skip { background: #7f8c8d; color: white; padding: 8px 16px; font-size: 0.9rem; margin-top: 20px; height: auto; }
+.btn-attack { 
+    background: #e74c3c; 
+    color: white; 
+}
 
+.btn-no-solution { 
+    background: #9b59b6; 
+    color: white; 
+}
+
+/* 跳過按鈕：收窄它與上方主按鈕的行距 */
+.btn-skip { 
+    background: #7f8c8d; 
+    color: white; 
+    padding: 8px 16px; 
+    font-size: 0.95rem; 
+    margin-top: 8px !important; /* 強制縮減上方行距 (原本是 20px) */
+    height: auto; 
+    box-shadow: 0 3px 0 rgba(0,0,0,0.3); /* 跳過按鈕陰影稍微減薄，區分主次 */
+}
 /* =========================================
    6. 彈出式視窗與解法
    ========================================= */
