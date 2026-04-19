@@ -37,7 +37,7 @@ function pressKey(val) {
  * 初始化新遊戲
  */
 function newGame() {
-    closeModal(); // 確保開始新局時關閉視窗
+    closeModal(); 
     clearInterval(timerInterval);
     timeLeft = 75;
     updateTimerDisplay();
@@ -84,7 +84,7 @@ function newGame() {
 
         if (numKeysContainer) {
             let key = document.createElement('button');
-            key.className = 'key';
+            key.className = 'key'; // 繼承統一的按鈕樣式
             key.innerText = n;
             key.onclick = () => pressKey(n.toString());
             numKeysContainer.appendChild(key);
@@ -111,6 +111,7 @@ function checkAnswer() {
     let rawInput = document.getElementById('user-input').value.trim();
     if (!rawInput) return;
 
+    // 格式化輸入以進行 eval
     let processedInput = rawInput
         .replace(/（/g, '(').replace(/）/g, ')')
         .replace(/x|×|X/g, '*').replace(/÷/g, '/');
@@ -137,7 +138,7 @@ function checkAnswer() {
             document.getElementById('level').innerText = level;
             showNextButton();
         } else {
-            handleWrongAnswer(`計算結果是 ${result}`);
+            handleWrongAnswer(`計算結果是 ${result.toFixed(1)}`);
         }
     } catch (e) {
         feedback.style.color = "#f1c40f";
@@ -146,7 +147,7 @@ function checkAnswer() {
 }
 
 /**
- * 錯誤處理與補答機制 (整合彈出視窗顯示所有解法)
+ * 錯誤處理與補答機制
  */
 function handleWrongAnswer(msg) {
     const feedback = document.getElementById('feedback');
@@ -154,13 +155,13 @@ function handleWrongAnswer(msg) {
     if (retryCount < 1) {
         retryCount++;
         feedback.style.color = "#f1c40f";
-        feedback.innerText = `⚠️ 輸入錯誤，你有一次補答機會！`;
+        feedback.innerText = `⚠️ ${msg}，你有一次補答機會！`;
     } else {
         triggerEffect('flash');
         feedback.style.color = "#e74c3c";
         feedback.innerText = `❌ ${msg}，挑戰失敗！`;
         
-        // 顯示所有解法的彈出視窗
+        // 顯示解法彈窗
         const allSolutions = findAllSolutions(currentNums);
         const listContainer = document.getElementById('all-solutions-list');
         
@@ -176,7 +177,7 @@ function handleWrongAnswer(msg) {
 }
 
 /**
- * 核心：尋找所有可行計法 (用於補答失敗後的顯示)
+ * 尋找所有計法
  */
 function findAllSolutions(nums) {
     let solutions = new Set();
@@ -193,15 +194,16 @@ function findAllSolutions(nums) {
                 let ops = [
                     { val: a.val + b.val, str: `(${a.str}+${b.str})` },
                     { val: a.val - b.val, str: `(${a.str}-${b.str})` },
-                    { val: a.val * b.val, str: `${a.str}×${b.str}` }
+                    { val: a.val * b.val, str: `(${a.str}×${b.str})` }
                 ];
-                if (b.val !== 0) ops.push({ val: a.val / b.val, str: `${a.str}÷${b.str}` });
+                if (b.val !== 0) ops.push({ val: a.val / b.val, str: `(${a.str}÷${b.str})` });
                 for (let res of ops) generate([...nextArr, res]);
             }
         }
     };
     generate(nums.map(n => ({ val: n, str: n.toString() })));
-    return Array.from(solutions).slice(0, 6); // 取前 6 組顯示
+    // 去除最外層括號並取前 6 組
+    return Array.from(solutions).map(s => s.replace(/^\((.*)\)$/, '$1')).slice(0, 6);
 }
 
 /**
@@ -239,7 +241,7 @@ function checkNoSolution() {
 }
 
 /**
- * 怪物特效
+ * 特效
  */
 function triggerEffect(className) {
     const el = document.getElementById('monster-icon');
@@ -274,7 +276,7 @@ function updateTimerDisplay() {
 }
 
 /**
- * 檢查是否有解
+ * 核心遞迴：檢查是否有解
  */
 function canSolve(nums, target = 24) {
     if (nums.length === 1) return Math.abs(nums[0] - target) < 1e-6;
