@@ -38,6 +38,7 @@ body {
 /* =========================================
    2. 按鈕外觀統一設定 (核心更新)
    ========================================= */
+/* 基礎樣式：所有按鈕共通 */
 button, .key, .close-btn {
     font-family: inherit;
     font-weight: bold;
@@ -63,7 +64,42 @@ button:active, .key:active, .close-btn:active {
 }
 
 /* =========================================
-   3. 狀態列與怪物區域
+   3. 虛擬鍵盤專用設定 (解決不統一問題)
+   ========================================= */
+.keyboard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px; /* 增加間距使立體感更清晰 */
+    margin: 15px auto;
+    width: 100%;
+}
+
+/* 強制鍵盤內的按鈕尺寸完全一致 */
+.keyboard button {
+    height: 55px;          /* 強制所有按鈕高度相同 */
+    width: 100%;           /* 寬度填滿網格 */
+    padding: 0;            /* 移除可能導致高度誤差的 padding */
+    font-size: 1.2rem;
+}
+
+/* 鍵盤按鈕顏色定義 (只改顏色，不改形狀) */
+.key {
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+.key-op {
+    background: #3498db;
+    color: white;
+}
+
+.key-del {
+    background: #95a5a6;
+    color: white;
+}
+
+/* =========================================
+   4. 狀態列、怪物與卡片
    ========================================= */
 header {
     display: flex;
@@ -89,9 +125,6 @@ header {
     user-select: none;
 }
 
-/* =========================================
-   4. 遊戲核心組件 (卡片與輸入框)
-   ========================================= */
 .card-container {
     display: flex;
     justify-content: center;
@@ -113,6 +146,9 @@ header {
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
+/* =========================================
+   5. 輸入框與下方動作按鈕
+   ========================================= */
 input {
     width: 100%;
     padding: 12px;
@@ -127,35 +163,6 @@ input {
     box-sizing: border-box;
 }
 
-/* =========================================
-   5. 虛擬鍵盤與功能按鈕顏色
-   ========================================= */
-.keyboard {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin: 10px auto;
-    width: 100%;
-}
-
-/* 鍵盤按鈕顏色定義 */
-.key {
-    background: #ecf0f1;
-    color: #2c3e50;
-    padding: 15px 0;
-    font-size: 1.2rem;
-}
-
-.key-op {
-    background: #3498db;
-    color: white;
-}
-
-.key-del {
-    background: #95a5a6;
-    color: white;
-}
-
 .button-group {
     display: flex;
     justify-content: center;
@@ -163,31 +170,18 @@ input {
     margin-top: 15px;
 }
 
-/* 動作按鈕顏色定義 */
-.btn-attack {
-    background: #e74c3c;
-    color: white;
-    padding: 12px 24px;
+.button-group button {
+    height: 50px;
+    padding: 0 24px;
     font-size: 1.1rem;
 }
 
-.btn-no-solution {
-    background: #9b59b6;
-    color: white;
-    padding: 12px 24px;
-    font-size: 1.1rem;
-}
-
-.btn-skip {
-    background: #7f8c8d;
-    color: white;
-    padding: 8px 16px;
-    font-size: 0.9rem;
-    margin-top: 20px;
-}
+.btn-attack { background: #e74c3c; color: white; }
+.btn-no-solution { background: #9b59b6; color: white; }
+.btn-skip { background: #7f8c8d; color: white; padding: 8px 16px; font-size: 0.9rem; margin-top: 20px; height: auto; }
 
 /* =========================================
-   6. 彈出式視窗 (Modal)
+   6. 彈出式視窗與解法
    ========================================= */
 .modal {
     display: none; 
@@ -225,7 +219,7 @@ input {
 }
 
 .close-btn {
-    background: #f39c12; /* 彈出視窗按鈕改用醒目的橘色 */
+    background: #f39c12; 
     color: white;
     padding: 10px 30px;
 }
