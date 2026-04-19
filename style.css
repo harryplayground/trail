@@ -7,18 +7,18 @@ body {
     font-family: '微軟正黑體', 'PingFang TC', sans-serif;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* 改為靠上，避免被鍵盤推擠 */
+    align-items: flex-start; 
     padding: 20px 0;
     margin: 0;
     height: 100vh;
-    overflow: hidden; /* 防止主頁面捲動，由容器內部處理 */
+    overflow: hidden; 
 }
 
-/* 遊戲主容器：限制最大高度以方便操作 */
+/* 遊戲主容器 */
 .adventure-map {
     width: 95%;
     max-width: 480px;
-    max-height: 95vh; /* 限制版面高度 */
+    max-height: 95vh;
     background: #34495e;
     border: 4px solid #f1c40f;
     border-radius: 15px;
@@ -27,16 +27,43 @@ body {
     box-shadow: 0 10px 0 #1a252f;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* 內容過多時允許內部捲動 */
+    overflow-y: auto; 
+    box-sizing: border-box;
 }
 
-/* 隱藏捲動條 (Chrome/Safari) */
 .adventure-map::-webkit-scrollbar {
     display: none;
 }
 
 /* =========================================
-   2. 狀態列與怪物區域
+   2. 按鈕外觀統一設定 (核心更新)
+   ========================================= */
+button, .key, .close-btn {
+    font-family: inherit;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;           /* 統一圓角 */
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.2);
+    position: relative;
+    top: 0;
+    /* 統一立體陰影 */
+    box-shadow: 0 5px 0 rgba(0,0,0,0.3);
+}
+
+/* 統一按下按鈕時的沉入效果 */
+button:active, .key:active, .close-btn:active {
+    top: 3px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.3) !important;
+}
+
+/* =========================================
+   3. 狀態列與怪物區域
    ========================================= */
 header {
     display: flex;
@@ -55,23 +82,15 @@ header {
 }
 
 .monster-sprite {
-    font-size: 60px; /* 稍微縮小以騰出空間 */
+    font-size: 60px;
     margin: 10px 0;
     display: inline-block;
     animation: bounce 2s infinite;
     user-select: none;
 }
 
-.dialog {
-    font-style: italic;
-    color: #f1c40f;
-    margin-bottom: 15px;
-    min-height: 1.2em;
-    font-size: 0.95rem;
-}
-
 /* =========================================
-   3. 遊戲核心組件
+   4. 遊戲核心組件 (卡片與輸入框)
    ========================================= */
 .card-container {
     display: flex;
@@ -95,8 +114,8 @@ header {
 }
 
 input {
-    width: 90%;
-    padding: 10px;
+    width: 100%;
+    padding: 12px;
     border-radius: 8px;
     border: 3px solid #7f8c8d;
     font-size: 1.2rem;
@@ -104,52 +123,71 @@ input {
     background-color: #ecf0f1;
     color: #2c3e50;
     outline: none;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
 }
 
 /* =========================================
-   4. 虛擬鍵盤設定
+   5. 虛擬鍵盤與功能按鈕顏色
    ========================================= */
 .keyboard {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    gap: 8px;
     margin: 10px auto;
     width: 100%;
 }
 
+/* 鍵盤按鈕顏色定義 */
 .key {
     background: #ecf0f1;
     color: #2c3e50;
-    border: none;
-    border-radius: 8px;
-    padding: 12px 0;
-    font-size: 1.1rem;
-    font-weight: bold;
-    box-shadow: 0 4px 0 #bdc3c7;
-    cursor: pointer;
-    transition: all 0.1s;
-}
-
-.key:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #bdc3c7;
+    padding: 15px 0;
+    font-size: 1.2rem;
 }
 
 .key-op {
     background: #3498db;
     color: white;
-    box-shadow: 0 4px 0 #2980b9;
 }
 
 .key-del {
     background: #95a5a6;
     color: white;
-    box-shadow: 0 4px 0 #7f8c8d;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+/* 動作按鈕顏色定義 */
+.btn-attack {
+    background: #e74c3c;
+    color: white;
+    padding: 12px 24px;
+    font-size: 1.1rem;
+}
+
+.btn-no-solution {
+    background: #9b59b6;
+    color: white;
+    padding: 12px 24px;
+    font-size: 1.1rem;
+}
+
+.btn-skip {
+    background: #7f8c8d;
+    color: white;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    margin-top: 20px;
 }
 
 /* =========================================
-   5. 彈出式視窗 (Modal) 樣式
+   6. 彈出式視窗 (Modal)
    ========================================= */
 .modal {
     display: none; 
@@ -163,7 +201,7 @@ input {
 
 .modal-content {
     background-color: #34495e;
-    margin: 10% auto;
+    margin: 15vh auto;
     padding: 25px;
     border: 3px solid #f1c40f;
     width: 85%;
@@ -176,51 +214,42 @@ input {
 
 .solutions-list {
     text-align: left;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.3);
     padding: 15px;
     border-radius: 8px;
     margin: 15px 0;
-    font-family: monospace;
+    font-family: 'Courier New', monospace;
     font-size: 1.1rem;
     color: #f1c40f;
+    line-height: 1.6;
 }
 
 .close-btn {
-    background: #e74c3c;
+    background: #f39c12; /* 彈出視窗按鈕改用醒目的橘色 */
     color: white;
     padding: 10px 30px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    display: inline-block;
-    box-shadow: 0 4px 0 #c0392b;
-}
-
-.close-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #c0392b;
 }
 
 /* =========================================
-   6. 動畫與按鈕
+   7. 訊息與動畫
    ========================================= */
-.button-group {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
+.message {
+    font-weight: bold;
+    margin: 15px 0;
+    min-height: 1.5em;
 }
 
-.btn-attack { background: #e74c3c; color: white; box-shadow: 0 5px 0 #c0392b; }
-.btn-no-solution { background: #9b59b6; color: white; box-shadow: 0 5px 0 #8e44ad; }
-.btn-skip { background: #7f8c8d; color: white; margin-top: 15px; box-shadow: 0 4px 0 #707b7c; }
-
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
 .shake { animation: shake-animation 0.5s ease-in-out; }
 @keyframes shake-animation {
     0%, 100% { transform: translate(0, 0); }
     10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 0); }
     20%, 40%, 60%, 80% { transform: translate(5px, 0); }
 }
+
 .flash { animation: flash-animation 0.2s linear 3; }
-@keyframes flash-animation { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; filter: brightness(2) red; } }
+@keyframes flash-animation { 
+    0%, 100% { opacity: 1; } 
+    50% { opacity: 0.3; background: #e74c3c; } 
+}
