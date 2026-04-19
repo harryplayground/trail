@@ -8,6 +8,29 @@ let retryCount = 0;
 
 const monsters = ['👾', '👹', '🐲', '🌵', '👻', '🐙', '🧟', '🐺', '🐝', '👽', '🧛'];
 
+/**
+ * 虛擬鍵盤輸入處理
+ */
+function pressKey(val) {
+    const input = document.getElementById('user-input');
+    // 如果輸入框被禁用（例如正在顯示正確答案或已答對），則不允許輸入
+    if (input.disabled) return;
+
+    if (val === 'AC') {
+        input.value = '';
+    } else if (val === 'DEL') {
+        input.value = input.value.slice(0, -1);
+    } else {
+        // 限制長度防止溢出螢幕
+        if (input.value.length < 25) {
+            input.value += val;
+        }
+    }
+}
+
+/**
+ * 初始化新遊戲
+ */
 function newGame() {
     clearInterval(timerInterval);
     timeLeft = 75;
@@ -16,6 +39,7 @@ function newGame() {
 
     retryCount = 0;
     const display = document.getElementById('number-display');
+    const numKeysContainer = document.getElementById('number-keys-container'); // 虛擬鍵盤數字區
     const feedback = document.getElementById('feedback');
     const inputField = document.getElementById('user-input');
     const nextBtn = document.getElementById('btn-next');
@@ -23,11 +47,12 @@ function newGame() {
     
     // 初始化介面
     display.innerHTML = '';
+    if (numKeysContainer) numKeysContainer.innerHTML = ''; // 清空舊的數字按鈕
     feedback.innerText = '';
     ansDisplay.innerText = '';
     inputField.value = '';
-    inputField.disabled = false; // 重新啟用輸入
-    if(nextBtn) nextBtn.style.display = 'none'; // 隱藏下一題按鈕
+    inputField.disabled = false; 
+    if(nextBtn) nextBtn.style.display = 'none';
 
     // 隨機怪物
     const monsterIcon = document.getElementById('monster-icon');
@@ -35,7 +60,7 @@ function newGame() {
         monsterIcon.innerText = monsters[Math.floor(Math.random() * monsters.length)];
     }
 
-    // 生成題目邏輯 (20%無解)
+    // 生成題目邏輯 (20% 無解模式)
     let nums = [];
     let isNoSolutionMode = Math.random() < 0.2;
     while (true) {
@@ -45,28 +70,46 @@ function newGame() {
     }
 
     currentNums = nums;
+
+    // 生成題目卡片 與 虛擬鍵盤數字按鈕
     currentNums.forEach(n => {
+        // 1. 生成上方顯示用的卡片
         let card = document.createElement('div');
         card.className = 'number-card';
         card.innerText = n;
         display.appendChild(card);
+
+        // 2. 生成下方鍵盤用的數字按鈕
+        if (numKeysContainer) {
+            let key = document.createElement('button');
+            key.className = 'key';
+            key.innerText = n;
+            key.onclick = () => pressKey(n.toString());
+            numKeysContainer.appendChild(key);
+        }
     });
 }
 
-// 修改：當答對或兩次答錯後，顯示「下一場戰鬥」按鈕
+/**
+ * 顯示「進入下一場戰鬥」按鈕並鎖定輸入
+ */
 function showNextButton() {
-    clearInterval(timerInterval); // 停止計時
+    clearInterval(timerInterval); 
     const nextBtn = document.getElementById('btn-next');
     const inputField = document.getElementById('user-input');
     if(nextBtn) nextBtn.style.display = 'inline-block';
-    if(inputField) inputField.disabled = true; // 鎖定輸入框
+    if(inputField) inputField.disabled = true; 
 }
 
+/**
+ * 檢查答案
+ */
 function checkAnswer() {
     const feedback = document.getElementById('feedback');
     let rawInput = document.getElementById('user-input').value.trim();
     if (!rawInput) return;
 
+    // 符號標準化 (雖然鍵盤已固定，但保留此邏輯以防萬一)
     let processedInput = rawInput
         .replace(/（/g, '(').replace(/）/g, ')')
         .replace(/x|×|X/g, '*').replace(/÷/g, '/');
@@ -91,7 +134,7 @@ function checkAnswer() {
             feedback.innerText = `💥 完美的一擊！結果是 24！(+${10 + timeLeft}分)`;
             level++;
             document.getElementById('level').innerText = level;
-            showNextButton(); // 顯示手動進入下一題按鈕
+            showNextButton();
         } else {
             handleWrongAnswer(`計算結果是 ${result}`);
         }
@@ -101,6 +144,9 @@ function checkAnswer() {
     }
 }
 
+/**
+ * 錯誤處理與補答機制
+ */
 function handleWrongAnswer(msg) {
     const feedback = document.getElementById('feedback');
     const ansDisplay = document.getElementById('correct-answer-display');
@@ -114,7 +160,6 @@ function handleWrongAnswer(msg) {
         feedback.style.color = "#e74c3c";
         feedback.innerText = `❌ ${msg}，挑戰失敗！`;
         
-        // 1. 顯示正確答案
         const solution = solve24(currentNums);
         ansDisplay.innerText = solution ? `💡 正確答案參考：${solution}` : "💡 這題經鑑定真的無解！";
         
@@ -122,9 +167,10 @@ function handleWrongAnswer(msg) {
     }
 }
 
-// 輔助函式：尋找一個可行解
+/**
+ * 尋找可行解 (暴力遞迴演算法)
+ */
 function solve24(nums) {
-    const ops = ['+', '-', '*', '/'];
     const generate = (arr) => {
         if (arr.length === 1) {
             if (Math.abs(arr[0].val - 24) < 1e-6) return arr[0].str;
@@ -153,20 +199,25 @@ function solve24(nums) {
     return generate(nums.map(n => ({ val: n, str: n.toString() })));
 }
 
+/**
+ * 扣除生命值
+ */
 function reduceHP() {
     hp--;
     document.getElementById('hp').innerText = hp;
     if (hp <= 0) {
-        alert(`💀 冒險結束！得分：${score}`);
+        alert(`💀 冒險結束！最終得分：${score}`);
         hp = 3; level = 1; score = 0;
         document.getElementById('score').innerText = score;
         newGame();
     } else {
-        showNextButton(); // 失敗後也顯示手動跳下一題
+        showNextButton();
     }
 }
 
-// 其餘功能 (checkNoSolution, triggerEffect, startTimer, canSolve...) 保留不變
+/**
+ * 此題無解判斷
+ */
 function checkNoSolution() {
     if (!canSolve(currentNums)) {
         triggerEffect('shake');
@@ -182,6 +233,9 @@ function checkNoSolution() {
     }
 }
 
+/**
+ * 怪物特效 (震動/閃爍)
+ */
 function triggerEffect(className) {
     const el = document.getElementById('monster-icon');
     if (el) {
@@ -190,6 +244,9 @@ function triggerEffect(className) {
     }
 }
 
+/**
+ * 計時器邏輯
+ */
 function startTimer() {
     timerInterval = setInterval(() => {
         timeLeft--;
@@ -211,6 +268,9 @@ function updateTimerDisplay() {
     }
 }
 
+/**
+ * 核心：遞迴檢查是否有解
+ */
 function canSolve(nums, target = 24) {
     if (nums.length === 1) return Math.abs(nums[0] - target) < 1e-6;
     for (let i = 0; i < nums.length; i++) {
