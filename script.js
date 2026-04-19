@@ -50,7 +50,7 @@ function newGame() {
     const inputField = document.getElementById('user-input');
     const nextBtn = document.getElementById('btn-next');
     
-    // 初始化介面
+    // 初始化介面內容
     display.innerHTML = '';
     if (numKeysContainer) numKeysContainer.innerHTML = '';
     feedback.innerText = '';
@@ -58,33 +58,39 @@ function newGame() {
     inputField.disabled = false; 
     if(nextBtn) nextBtn.style.display = 'none';
 
-    // 隨機怪物
+    // 隨機怪物圖標
     const monsterIcon = document.getElementById('monster-icon');
     if (monsterIcon) {
         monsterIcon.innerText = monsters[Math.floor(Math.random() * monsters.length)];
     }
 
-    // 生成題目邏輯 (20% 無解模式)
+    // 生成題目邏輯 (20% 機率進入無解模式)
     let nums = [];
     let isNoSolutionMode = Math.random() < 0.2;
     while (true) {
         let tempNums = [];
         for (let i = 0; i < 4; i++) tempNums.push(Math.floor(Math.random() * 13) + 1);
-        if (canSolve(tempNums) === !isNoSolutionMode) { nums = tempNums; break; }
+        // 確保題目符合該模式的要求
+        if (canSolve(tempNums) === !isNoSolutionMode) { 
+            nums = tempNums; 
+            break; 
+        }
     }
 
     currentNums = nums;
 
-    // 生成卡片與鍵盤按鈕
+    // 生成題目卡片與虛擬鍵盤上的數字按鈕
     currentNums.forEach(n => {
+        // 1. 生成上方顯示卡片
         let card = document.createElement('div');
         card.className = 'number-card';
         card.innerText = n;
         display.appendChild(card);
 
+        // 2. 生成鍵盤數字按鈕 (確保樣式類別統一)
         if (numKeysContainer) {
             let key = document.createElement('button');
-            key.className = 'key'; // 繼承統一的按鈕樣式
+            key.className = 'key'; // 這裡必須與 CSS 中的 .key 樣式一致
             key.innerText = n;
             key.onclick = () => pressKey(n.toString());
             numKeysContainer.appendChild(key);
@@ -93,7 +99,7 @@ function newGame() {
 }
 
 /**
- * 顯示「進入下一場戰鬥」按鈕並鎖定輸入
+ * 鎖定輸入並顯示下一關按鈕
  */
 function showNextButton() {
     clearInterval(timerInterval); 
@@ -104,19 +110,20 @@ function showNextButton() {
 }
 
 /**
- * 檢查答案
+ * 檢查公式正確性
  */
 function checkAnswer() {
     const feedback = document.getElementById('feedback');
     let rawInput = document.getElementById('user-input').value.trim();
     if (!rawInput) return;
 
-    // 格式化輸入以進行 eval
+    // 格式化符號以便進行 JavaScript 運算
     let processedInput = rawInput
         .replace(/（/g, '(').replace(/）/g, ')')
         .replace(/x|×|X/g, '*').replace(/÷/g, '/');
 
     try {
+        // 驗證數字使用是否正確
         let usedNums = (processedInput.match(/\d+/g) || []).map(Number).sort((a,b)=>a-b);
         let goalNums = [...currentNums].sort((a, b) => a - b);
 
@@ -126,6 +133,7 @@ function checkAnswer() {
             return;
         }
 
+        // 計算公式結果
         let result = new Function(`return ${processedInput}`)();
 
         if (Math.abs(result - 24) < 1e-6) {
@@ -133,7 +141,7 @@ function checkAnswer() {
             score += (10 + timeLeft);
             document.getElementById('score').innerText = score;
             feedback.style.color = "#2ecc71";
-            feedback.innerText = `💥 完美的一擊！結果是 24！(+${10 + timeLeft}分)`;
+            feedback.innerText = `💥 完美一擊！結果是 24！(+${10 + timeLeft}分)`;
             level++;
             document.getElementById('level').innerText = level;
             showNextButton();
@@ -142,7 +150,7 @@ function checkAnswer() {
         }
     } catch (e) {
         feedback.style.color = "#f1c40f";
-        feedback.innerText = "❓ 格式錯誤 ( 檢查括號或符號 )";
+        feedback.innerText = "❓ 格式錯誤 ( 請檢查括號或運算符 )";
     }
 }
 
@@ -155,20 +163,20 @@ function handleWrongAnswer(msg) {
     if (retryCount < 1) {
         retryCount++;
         feedback.style.color = "#f1c40f";
-        feedback.innerText = `⚠️ ${msg}，你有一次補答機會！`;
+        feedback.innerText = `⚠️ ${msg}，你有最後一次補答機會！`;
     } else {
         triggerEffect('flash');
         feedback.style.color = "#e74c3c";
         feedback.innerText = `❌ ${msg}，挑戰失敗！`;
         
-        // 顯示解法彈窗
+        // 補答失敗，查詢所有可能的解法並顯示彈窗
         const allSolutions = findAllSolutions(currentNums);
         const listContainer = document.getElementById('all-solutions-list');
         
         if (allSolutions.length > 0) {
             listContainer.innerHTML = allSolutions.map((s, i) => `<div>${i+1}. ${s}</div>`).join('');
         } else {
-            listContainer.innerHTML = "這組數字真的無法湊成 24 喔！";
+            listContainer.innerHTML = "經鑑定，這組數字真的無法湊成 24。";
         }
         
         document.getElementById('solution-modal').style.display = 'block';
@@ -177,7 +185,7 @@ function handleWrongAnswer(msg) {
 }
 
 /**
- * 尋找所有計法
+ * 暴力搜索所有計法 (顯示於彈窗)
  */
 function findAllSolutions(nums) {
     let solutions = new Set();
@@ -202,18 +210,18 @@ function findAllSolutions(nums) {
         }
     };
     generate(nums.map(n => ({ val: n, str: n.toString() })));
-    // 去除最外層括號並取前 6 組
+    // 清理最外層多餘括號，並限制顯示前 6 組
     return Array.from(solutions).map(s => s.replace(/^\((.*)\)$/, '$1')).slice(0, 6);
 }
 
 /**
- * 扣除生命值
+ * 扣除 HP 與結束判斷
  */
 function reduceHP() {
     hp--;
     document.getElementById('hp').innerText = hp;
     if (hp <= 0) {
-        alert(`💀 冒險結束！最終得分：${score}`);
+        alert(`💀 勇者倒下了！最終得分：${score}`);
         hp = 3; level = 1; score = 0;
         document.getElementById('score').innerText = score;
         newGame();
@@ -223,7 +231,7 @@ function reduceHP() {
 }
 
 /**
- * 此題無解判斷
+ * 點擊「無解」按鈕的判斷邏輯
  */
 function checkNoSolution() {
     if (!canSolve(currentNums)) {
@@ -231,17 +239,17 @@ function checkNoSolution() {
         score += 20;
         document.getElementById('score').innerText = score;
         document.getElementById('feedback').style.color = "#2ecc71";
-        document.getElementById('feedback').innerText = "🎯 洞察正確！這題真的無解。";
+        document.getElementById('feedback').innerText = "🎯 洞察力驚人！這題的確無解。";
         level++;
         document.getElementById('level').innerText = level;
         showNextButton();
     } else {
-        handleWrongAnswer("這題其實是有解的喔！");
+        handleWrongAnswer("這題其實是有解法的喔！");
     }
 }
 
 /**
- * 特效
+ * 視覺效果控制
  */
 function triggerEffect(className) {
     const el = document.getElementById('monster-icon');
@@ -252,7 +260,7 @@ function triggerEffect(className) {
 }
 
 /**
- * 計時器
+ * 計時器邏輯
  */
 function startTimer() {
     timerInterval = setInterval(() => {
@@ -261,7 +269,7 @@ function startTimer() {
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             triggerEffect('flash');
-            document.getElementById('feedback').innerText = "⏰ 時間到！";
+            document.getElementById('feedback').innerText = "⏰ 時間耗盡！";
             reduceHP();
         }
     }, 1000);
@@ -276,7 +284,7 @@ function updateTimerDisplay() {
 }
 
 /**
- * 核心遞迴：檢查是否有解
+ * 底層算法：判斷題目是否有解
  */
 function canSolve(nums, target = 24) {
     if (nums.length === 1) return Math.abs(nums[0] - target) < 1e-6;
