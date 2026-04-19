@@ -23,7 +23,22 @@
         <div id="number-display" class="card-container"></div>
 
         <div class="input-section">
-            <input type="text" id="user-input" placeholder="例如: 6*(3+3-2)">
+            <input type="text" id="user-input" placeholder="點擊下方按鈕輸入公式" readonly>
+            
+            <div class="keyboard" id="virtual-keyboard">
+                <button class="key key-op" onclick="pressKey('(')">(</button>
+                <button class="key key-op" onclick="pressKey(')')">)</button>
+                <button class="key key-op" onclick="pressKey('+')">+</button>
+                <button class="key key-op" onclick="pressKey('-')">-</button>
+                <button class="key key-op" onclick="pressKey('*')">×</button>
+                <button class="key key-op" onclick="pressKey('/')">÷</button>
+                
+                <button class="key key-del" onclick="pressKey('DEL')">←</button>
+                <button class="key key-del" onclick="pressKey('AC')">AC</button>
+                
+                <div id="number-keys-container" style="display: contents;"></div>
+            </div>
+
             <div class="button-group">
                 <button class="btn-attack" onclick="checkAnswer()">發動攻擊！</button>
                 <button class="btn-no-solution" onclick="checkNoSolution()">此題無解</button>
@@ -31,7 +46,6 @@
         </div>
 
         <p id="feedback" class="message"></p>
-        
         <p id="correct-answer-display" style="color: #f1c40f; font-weight: bold; min-height: 1.5em; margin: 10px 0;"></p>
         
         <div class="controls">
@@ -41,7 +55,7 @@
         </div>
 
         <p style="font-size: 0.8rem; color: #bdc3c7; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-            提示：「*」= 乘號 (x) ；「/」= 除號 (÷)
+            提示：使用畫面按鈕進行運算。勇者，挑戰 24 吧！
         </p>
     </div>
     
