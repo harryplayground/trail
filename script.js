@@ -9,11 +9,17 @@ let retryCount = 0;
 const monsters = ['👾', '👹', '🐲', '🌵', '👻', '🐙', '🧟', '🐺', '🐝', '👽', '🧛'];
 
 /**
+ * 彈出式視窗控制
+ */
+function closeModal() {
+    document.getElementById('solution-modal').style.display = 'none';
+}
+
+/**
  * 虛擬鍵盤輸入處理
  */
 function pressKey(val) {
     const input = document.getElementById('user-input');
-    // 如果輸入框被禁用（例如正在顯示正確答案或已答對），則不允許輸入
     if (input.disabled) return;
 
     if (val === 'AC') {
@@ -21,7 +27,6 @@ function pressKey(val) {
     } else if (val === 'DEL') {
         input.value = input.value.slice(0, -1);
     } else {
-        // 限制長度防止溢出螢幕
         if (input.value.length < 25) {
             input.value += val;
         }
@@ -32,6 +37,7 @@ function pressKey(val) {
  * 初始化新遊戲
  */
 function newGame() {
+    closeModal(); // 確保開始新局時關閉視窗
     clearInterval(timerInterval);
     timeLeft = 75;
     updateTimerDisplay();
@@ -39,17 +45,15 @@ function newGame() {
 
     retryCount = 0;
     const display = document.getElementById('number-display');
-    const numKeysContainer = document.getElementById('number-keys-container'); // 虛擬鍵盤數字區
+    const numKeysContainer = document.getElementById('number-keys-container');
     const feedback = document.getElementById('feedback');
     const inputField = document.getElementById('user-input');
     const nextBtn = document.getElementById('btn-next');
-    const ansDisplay = document.getElementById('correct-answer-display');
     
     // 初始化介面
     display.innerHTML = '';
-    if (numKeysContainer) numKeysContainer.innerHTML = ''; // 清空舊的數字按鈕
+    if (numKeysContainer) numKeysContainer.innerHTML = '';
     feedback.innerText = '';
-    ansDisplay.innerText = '';
     inputField.value = '';
     inputField.disabled = false; 
     if(nextBtn) nextBtn.style.display = 'none';
@@ -71,15 +75,13 @@ function newGame() {
 
     currentNums = nums;
 
-    // 生成題目卡片 與 虛擬鍵盤數字按鈕
+    // 生成卡片與鍵盤按鈕
     currentNums.forEach(n => {
-        // 1. 生成上方顯示用的卡片
         let card = document.createElement('div');
         card.className = 'number-card';
         card.innerText = n;
         display.appendChild(card);
 
-        // 2. 生成下方鍵盤用的數字按鈕
         if (numKeysContainer) {
             let key = document.createElement('button');
             key.className = 'key';
@@ -109,7 +111,6 @@ function checkAnswer() {
     let rawInput = document.getElementById('user-input').value.trim();
     if (!rawInput) return;
 
-    // 符號標準化 (雖然鍵盤已固定，但保留此邏輯以防萬一)
     let processedInput = rawInput
         .replace(/（/g, '(').replace(/）/g, ')')
         .replace(/x|×|X/g, '*').replace(/÷/g, '/');
@@ -145,11 +146,10 @@ function checkAnswer() {
 }
 
 /**
- * 錯誤處理與補答機制
+ * 錯誤處理與補答機制 (整合彈出視窗顯示所有解法)
  */
 function handleWrongAnswer(msg) {
     const feedback = document.getElementById('feedback');
-    const ansDisplay = document.getElementById('correct-answer-display');
 
     if (retryCount < 1) {
         retryCount++;
@@ -160,43 +160,48 @@ function handleWrongAnswer(msg) {
         feedback.style.color = "#e74c3c";
         feedback.innerText = `❌ ${msg}，挑戰失敗！`;
         
-        const solution = solve24(currentNums);
-        ansDisplay.innerText = solution ? `💡 正確答案參考：${solution}` : "💡 這題經鑑定真的無解！";
+        // 顯示所有解法的彈出視窗
+        const allSolutions = findAllSolutions(currentNums);
+        const listContainer = document.getElementById('all-solutions-list');
         
+        if (allSolutions.length > 0) {
+            listContainer.innerHTML = allSolutions.map((s, i) => `<div>${i+1}. ${s}</div>`).join('');
+        } else {
+            listContainer.innerHTML = "這組數字真的無法湊成 24 喔！";
+        }
+        
+        document.getElementById('solution-modal').style.display = 'block';
         reduceHP();
     }
 }
 
 /**
- * 尋找可行解 (暴力遞迴演算法)
+ * 核心：尋找所有可行計法 (用於補答失敗後的顯示)
  */
-function solve24(nums) {
+function findAllSolutions(nums) {
+    let solutions = new Set();
     const generate = (arr) => {
         if (arr.length === 1) {
-            if (Math.abs(arr[0].val - 24) < 1e-6) return arr[0].str;
-            return null;
+            if (Math.abs(arr[0].val - 24) < 1e-6) solutions.add(arr[0].str);
+            return;
         }
         for (let i = 0; i < arr.length; i++) {
             for (let j = 0; j < arr.length; j++) {
                 if (i === j) continue;
                 let nextArr = arr.filter((_, idx) => idx !== i && idx !== j);
                 let a = arr[i], b = arr[j];
-                let results = [
+                let ops = [
                     { val: a.val + b.val, str: `(${a.str}+${b.str})` },
                     { val: a.val - b.val, str: `(${a.str}-${b.str})` },
-                    { val: a.val * b.val, str: `(${a.str}*${b.str})` }
+                    { val: a.val * b.val, str: `${a.str}×${b.str}` }
                 ];
-                if (b.val !== 0) results.push({ val: a.val / b.val, str: `(${a.str}/${b.str})` });
-                
-                for (let res of results) {
-                    let final = generate([...nextArr, res]);
-                    if (final) return final;
-                }
+                if (b.val !== 0) ops.push({ val: a.val / b.val, str: `${a.str}÷${b.str}` });
+                for (let res of ops) generate([...nextArr, res]);
             }
         }
-        return null;
     };
-    return generate(nums.map(n => ({ val: n, str: n.toString() })));
+    generate(nums.map(n => ({ val: n, str: n.toString() })));
+    return Array.from(solutions).slice(0, 6); // 取前 6 組顯示
 }
 
 /**
@@ -234,7 +239,7 @@ function checkNoSolution() {
 }
 
 /**
- * 怪物特效 (震動/閃爍)
+ * 怪物特效
  */
 function triggerEffect(className) {
     const el = document.getElementById('monster-icon');
@@ -245,7 +250,7 @@ function triggerEffect(className) {
 }
 
 /**
- * 計時器邏輯
+ * 計時器
  */
 function startTimer() {
     timerInterval = setInterval(() => {
@@ -269,7 +274,7 @@ function updateTimerDisplay() {
 }
 
 /**
- * 核心：遞迴檢查是否有解
+ * 檢查是否有解
  */
 function canSolve(nums, target = 24) {
     if (nums.length === 1) return Math.abs(nums[0] - target) < 1e-6;
