@@ -122,7 +122,9 @@ header {
    5. 輸入框與下方動作按鈕 (加大並收窄行距)
    ========================================= */
 input {
-    width: 100%;
+    width: 85%;          /* 從 100% 縮小到 85% */
+    max-width: 320px;    /* 設定最大寬度，避免在平板上太長 */
+    margin: 0 auto 10px auto; /* 居中顯示 */
     padding: 12px;
     border-radius: 8px;
     border: 3px solid #7f8c8d;
@@ -130,7 +132,7 @@ input {
     text-align: center;
     background-color: #ecf0f1;
     color: #2c3e50;
-    margin-bottom: 5px; 
+    display: block;      /* 確保居中生效 */
 }
 
 .button-group {
@@ -203,10 +205,7 @@ input {
 }
 
 .close-btn {
-    background: #7f8c8d;
-    color: white;
-    padding: 10px;
-    font-size: 0.9rem;
+    display: none !important;
 }
 
 /* =========================================
