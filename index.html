@@ -45,12 +45,6 @@
         </div>
 
         <p id="feedback" class="message"></p>
-        
-        <div class="controls">
-            <button id="btn-next" class="btn-attack" style="display: none; background: #27ae60; margin-bottom: 10px;" onclick="newGame()">進入下一場戰鬥！</button>
-            <br>
-            <button class="btn-skip" onclick="newGame()">逃跑 (換題)</button>
-        </div>
 
         <p style="font-size: 0.8rem; color: #bdc3c7; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
             提示：使用畫面按鈕進行運算。勇者，挑戰 24 吧！
@@ -59,11 +53,18 @@
 
     <div id="solution-modal" class="modal">
         <div class="modal-content">
-            <h3>📜 所有的計法參考</h3>
-            <p style="font-size: 0.9rem; color: #bdc3c7;">根據典籍記載，以下是可行的路徑：</p>
-            <div id="all-solutions-list" class="solutions-list">
-                </div>
-            <button class="close-btn" onclick="closeModal()">繼續冒險</button>
+            <h2 id="modal-title">戰鬥結果</h2>
+            <div id="modal-msg" style="margin: 15px 0; font-size: 1.1rem; line-height: 1.4;"></div>
+            
+            <div id="solution-section">
+                <p style="font-size: 0.9rem; color: #f1c40f; margin-bottom: 5px;">📜 傳說中的計法參考：</p>
+                <div id="all-solutions-list" class="solutions-list"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="btn-modal-next" class="btn-modal-next" onclick="newGame()">進入下一場戰鬥</button>
+                <button class="close-btn" onclick="closeModal()">關閉提示</button>
+            </div>
         </div>
     </div>
     
