@@ -9,14 +9,14 @@ let retryCount = 0;
 const monsters = ['👾', '👹', '🐲', '🌵', '👻', '🐙', '🧟', '🐺', '🐝', '👽', '🧛'];
 
 /**
- * 彈出式視窗控制
+ * 彈出式視窗控制 (僅供內部開啟/關閉)
  */
 function closeModal() {
     document.getElementById('solution-modal').style.display = 'none';
 }
 
 /**
- * 顯示結果彈窗 (核心更新)
+ * 顯示結果彈窗 (核心更新：強制性)
  * @param {boolean} isSuccess 是否成功
  * @param {string} message 顯示的訊息內容
  */
@@ -31,7 +31,7 @@ function showResultModal(isSuccess, message) {
     clearInterval(timerInterval);
     document.getElementById('user-input').disabled = true;
 
-    // 設定標題與訊息
+    // 設定標題與訊息內容
     title.innerText = isSuccess ? "🎊 戰勝怪物！" : "💀 戰鬥失敗...";
     title.style.color = isSuccess ? "#2ecc71" : "#e74c3c";
     msgEl.innerText = message;
@@ -46,7 +46,13 @@ function showResultModal(isSuccess, message) {
             allSolutions.map((s, i) => `<div>${i+1}. ${s}</div>`).join('') : "經鑑定，這題真的無解。";
     }
 
+    // 顯示視窗
     modal.style.display = 'block';
+
+    // 強制機制：禁用點擊背景關閉視窗，玩家必須點擊按鈕
+    modal.onclick = function(event) {
+        // 不執行任何關閉動作
+    };
 }
 
 /**
@@ -68,10 +74,10 @@ function pressKey(val) {
 }
 
 /**
- * 初始化新遊戲
+ * 初始化新遊戲 (進入下一關時呼叫)
  */
 function newGame() {
-    closeModal(); 
+    closeModal(); // 清除之前的彈窗
     clearInterval(timerInterval);
     timeLeft = 75;
     updateTimerDisplay();
@@ -181,7 +187,7 @@ function handleWrongAnswer(msg) {
         feedback.innerText = `⚠️ ${msg}，還有最後一次補答機會！`;
     } else {
         triggerEffect('flash');
-        reduceHP(); // 內部會判斷 HP 是否歸零
+        reduceHP(); 
         if (hp > 0) {
             showResultModal(false, `${msg}。你受到了怪物的反擊！`);
         }
@@ -218,7 +224,7 @@ function findAllSolutions(nums) {
 }
 
 /**
- * 扣除 HP 與結束判斷
+ * 扣除 HP 與結束重置
  */
 function reduceHP() {
     hp--;
@@ -226,10 +232,12 @@ function reduceHP() {
     if (hp <= 0) {
         clearInterval(timerInterval);
         alert(`💀 勇者倒下了！最終得分：${score}`);
+        // 回到第一關
         hp = 3; level = 1; score = 0;
         document.getElementById('score').innerText = score;
         document.getElementById('hp').innerText = hp;
-        newGame();
+        document.getElementById('level').innerText = level;
+        newGame(); // 這裡會自動關閉視窗並重啟新局
     }
 }
 
