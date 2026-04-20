@@ -53,19 +53,19 @@ header {
 }
 
 /* =========================================
-   3. 戰鬥區域佈局 (時間 + 怪物)
+   3. 戰鬥區域佈局 (時間置左 + 怪物置中)
    ========================================= */
 .battle-container {
     display: flex;            /* 啟用彈性佈局 */
-    flex-direction: row;      /* 強制橫向排列，防止時間跑到上方 */
+    flex-direction: row;      /* 強制橫向排列 */
     justify-content: center;  /* 水平居中 */
     align-items: center;      /* 垂直居中 */
     gap: 10px;                /* 元素間距 */
     margin: 20px 0;
-    width: 100%;              /* 確保佔滿寬度 */
+    width: 100%;
 }
 
-/* 時間顯示區塊 (位於左側) */
+/* 時間顯示區塊 */
 .side-timer-box {
     flex: 1;                  /* 佔用 1 份空間 */
     display: flex;
@@ -95,9 +95,9 @@ header {
     transition: color 0.3s ease;
 }
 
-/* 怪物區域 (置中) */
+/* 怪物區域 */
 .monster-area {
-    flex: 1.5;                /* 怪物區域稍寬，保持重心 */
+    flex: 1.5;                /* 怪物區域稍寬，維持視覺重心 */
     height: 100px;
     display: flex;
     justify-content: center;
@@ -107,13 +107,13 @@ header {
 .monster-sprite {
     font-size: 60px;
     animation: bounce 2s infinite;
-    line-height: 1;           /* 修正行高防止偏移 */
+    line-height: 1;
 }
 
-/* 右側平衡佔位符：確保怪物在中間 */
+/* 右側平衡佔位符：確保怪物精準居中 */
 .side-placeholder {
     flex: 1;
-    visibility: hidden;       /* 不顯示但保留空間 */
+    visibility: hidden;
 }
 
 /* =========================================
@@ -155,7 +155,7 @@ input {
 }
 
 /* =========================================
-   5. 虛擬鍵盤與按鈕
+   5. 虛擬鍵盤與按鈕 (核心加大更新)
    ========================================= */
 .keyboard {
     display: grid;
@@ -194,6 +194,7 @@ button:active, .key:active {
 .key-op { background: #3498db; color: white; }
 .key-del { background: #95a5a6; color: white; }
 
+/* 加大後的動作按鈕 */
 .button-group {
     display: flex;
     justify-content: center;
@@ -201,17 +202,19 @@ button:active, .key:active {
 }
 
 .button-group button {
-    height: 70px;          /* 從 60px 增加到 70px，配合大字體 */
-    font-size: 1.6rem;     /* 從 1.2rem 加大，這會讓文字非常醒目 */
+    height: 70px;          /* 增加高度 */
+    font-size: 1.6rem;     /* 明顯加大字體 */
     flex: 1;
-    max-width: 180px;      /* 稍微加寬一點點防止文字折行 */
-    letter-spacing: 2px;   /* 增加字距讓內容更有氣勢 */
+    max-width: 180px;
+    letter-spacing: 2px;   /* 增加字距 */
 }
 
+/* 針對窄螢幕手機的適配 */
 @media (max-width: 400px) {
     .button-group button {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
         height: 65px;
+        letter-spacing: 1px;
     }
 }
 
@@ -258,6 +261,7 @@ button:active, .key:active {
     color: white;
     height: 60px;
     width: 100%;
+    font-size: 1.3rem;
 }
 
 .message { min-height: 1.2em; margin-top: 10px; font-weight: bold; }
