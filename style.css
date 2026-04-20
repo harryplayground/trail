@@ -56,16 +56,18 @@ header {
    3. 戰鬥區域佈局 (時間 + 怪物)
    ========================================= */
 .battle-container {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin: 10px 0;
-    min-height: 120px;
+    display: flex;            /* 啟用彈性佈局 */
+    flex-direction: row;      /* 強制橫向排列，防止時間跑到上方 */
+    justify-content: center;  /* 水平居中 */
+    align-items: center;      /* 垂直居中 */
+    gap: 10px;                /* 元素間距 */
+    margin: 20px 0;
+    width: 100%;              /* 確保佔滿寬度 */
 }
 
 /* 時間顯示區塊 (位於左側) */
 .side-timer-box {
-    flex: 1;
+    flex: 1;                  /* 佔用 1 份空間 */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -87,7 +89,7 @@ header {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 1.8rem;
     font-weight: bold;
-    min-width: 3rem;
+    min-width: 3.5rem;
     text-align: center;
     font-variant-numeric: tabular-nums;
     transition: color 0.3s ease;
@@ -95,7 +97,7 @@ header {
 
 /* 怪物區域 (置中) */
 .monster-area {
-    flex: 1.5;
+    flex: 1.5;                /* 怪物區域稍寬，保持重心 */
     height: 100px;
     display: flex;
     justify-content: center;
@@ -105,11 +107,13 @@ header {
 .monster-sprite {
     font-size: 60px;
     animation: bounce 2s infinite;
+    line-height: 1;           /* 修正行高防止偏移 */
 }
 
-/* 右側平衡佔位符 */
+/* 右側平衡佔位符：確保怪物在中間 */
 .side-placeholder {
     flex: 1;
+    visibility: hidden;       /* 不顯示但保留空間 */
 }
 
 /* =========================================
