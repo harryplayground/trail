@@ -201,9 +201,18 @@ button:active, .key:active {
 }
 
 .button-group button {
-    height: 60px;
+    height: 70px;          /* 從 60px 增加到 70px，配合大字體 */
+    font-size: 1.6rem;     /* 從 1.2rem 加大，這會讓文字非常醒目 */
     flex: 1;
-    max-width: 160px;
+    max-width: 180px;      /* 稍微加寬一點點防止文字折行 */
+    letter-spacing: 2px;   /* 增加字距讓內容更有氣勢 */
+}
+
+@media (max-width: 400px) {
+    .button-group button {
+        font-size: 1.4rem;
+        height: 65px;
+    }
 }
 
 .btn-attack { background: #e74c3c; color: white; }
