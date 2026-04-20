@@ -4,6 +4,7 @@ let level = 1;
 let score = 0;
 let timeLeft = 90; // 起始時間 90 秒
 let timerInterval;
+let isPaused = false; // 控制計時器暫停的狀態開關
 
 const MAX_TIME = 120; // 時間上限
 const monsters = ['👾', '👹', '🐲', '🌵', '👻', '🐙', '🧟', '🐺', '🐝', '👽', '🧛'];
@@ -28,10 +29,11 @@ function pressKey(val) {
 
 /**
  * 初始化新遊戲 (換關)
- * 注意：生存模式下不重置 timeLeft
  */
 function newGame() {
-    // 關閉視窗與重置輸入狀態
+    // 1. 恢復倒數與重置 UI 狀態
+    isPaused = false; 
+    document.getElementById('timer').classList.remove('timer-paused');
     document.getElementById('solution-modal').style.display = 'none';
     document.getElementById('user-input').disabled = false;
     document.getElementById('user-input').value = '';
@@ -74,7 +76,6 @@ function newGame() {
         keyContainer.appendChild(key);
     });
     
-    // 同步更新一次顯示，確保顏色正確
     updateTimerDisplay();
 }
 
@@ -101,7 +102,7 @@ function checkAnswer() {
         let result = new Function(`return ${processed}`)();
 
         if (Math.abs(result - 24) < 1e-6) {
-            handleSuccess(false); // 成功答題
+            handleSuccess(false); 
         } else {
             handleWrongAnswer(`結果是 ${result.toFixed(1)}`);
         }
@@ -116,7 +117,7 @@ function checkAnswer() {
  */
 function checkNoSolution() {
     if (!canSolve(currentNums)) {
-        handleSuccess(true); // 成功識破無解
+        handleSuccess(true); 
     } else {
         handleWrongAnswer("這題其實是有解法的！");
     }
@@ -126,12 +127,10 @@ function checkNoSolution() {
  * 答對處理 (生存獎勵加秒)
  */
 function handleSuccess(isNoSolutionChallenge) {
-    // 難度曲線獎勵：Level 1-10 加 20秒，之後加 15秒
     let addTime = (level <= 10) ? 20 : 15;
     
-    // 無解題額外獎勵：加 5-10 秒 (此處採納建議定為 +10s)
     if (isNoSolutionChallenge) {
-        addTime += 10;
+        addTime += 10; // 無解題額外獎勵
     }
 
     timeLeft = Math.min(timeLeft + addTime, MAX_TIME);
@@ -141,7 +140,7 @@ function handleSuccess(isNoSolutionChallenge) {
     document.getElementById('score').innerText = score;
     document.getElementById('level').innerText = level;
     
-    updateTimerDisplay(); // 立即更新時間顯示
+    updateTimerDisplay(); 
     triggerEffect('shake');
     showResultModal(true, isNoSolutionChallenge ? 
         `洞察正確！成功識破怪物的幻覺，時間大幅增加 ${addTime}s！` : 
@@ -149,10 +148,10 @@ function handleSuccess(isNoSolutionChallenge) {
 }
 
 /**
- * 答錯處理 (扣時 -10s + 換題)
+ * 答錯處理
  */
 function handleWrongAnswer(msg) {
-    timeLeft = Math.max(0, timeLeft - 10); // 罰扣 10 秒
+    timeLeft = Math.max(0, timeLeft - 10); 
     updateTimerDisplay();
     triggerEffect('flash');
     reduceHP(false, msg);
@@ -170,24 +169,24 @@ function reduceHP(isTimeOut, msg = "") {
         alert(`💀 冒險結束！勇者在第 ${level} 關倒下了。\n最終得分：${score}`);
         location.reload(); 
     } else {
-        // 生存模式規則：答錯直接換題
         let failMsg = isTimeOut ? 
             "⏰ 時間耗盡！勇者露出了破綻，受到 1 點傷害並換題。" : 
-            `💥 ${msg}！受到反擊扣除 10s 與 1 點 HP，強制進入下一場戰鬥。`;
+            `💥 ${msg}！受到反擊扣除 10s 與 1 點 HP，強制更換關卡。`;
         showResultModal(false, failMsg);
     }
 }
 
 /**
- * 生存計時器核心
+ * 生存計時器核心 (整合暫停功能)
  */
 function startTimer() {
     timerInterval = setInterval(() => {
+        if (isPaused) return; // 如果被鎖死暫停，就不往下跑
+
         timeLeft--;
         updateTimerDisplay();
         
         if (timeLeft <= 0) {
-            clearInterval(timerInterval);
             reduceHP(true);
         }
     }, 1000);
@@ -195,7 +194,6 @@ function startTimer() {
 
 /**
  * 更新計時器顯示與顏色
- * 配合 CSS 的 min-width 與 tabular-nums 可防止版面跳動
  */
 function updateTimerDisplay() {
     const timerEl = document.getElementById('timer');
@@ -203,7 +201,6 @@ function updateTimerDisplay() {
     
     timerEl.innerText = timeLeft;
 
-    // 視覺顏色變化：綠 (>40) -> 黃 (16-40) -> 紅 (<=15)
     if (timeLeft > 40) {
         timerEl.style.color = "#2ecc71";
     } else if (timeLeft > 15) {
@@ -214,9 +211,12 @@ function updateTimerDisplay() {
 }
 
 /**
- * 結果彈窗 (隱藏關閉按鈕，強制玩家點擊「進入下一場」)
+ * 結果彈窗 (觸發暫停)
  */
 function showResultModal(isSuccess, message) {
+    isPaused = true; // 鎖死時間倒數
+    document.getElementById('timer').classList.add('timer-paused'); // 加入 CSS 視覺鎖死效果
+
     const modal = document.getElementById('solution-modal');
     const title = document.getElementById('modal-title');
     const msgEl = document.getElementById('modal-msg');
@@ -265,7 +265,7 @@ function findAllSolutions(nums) {
 }
 
 /**
- * 怪物視覺效果
+ * 視覺效果
  */
 function triggerEffect(name) {
     const box = document.getElementById('monster-box');
@@ -276,7 +276,7 @@ function triggerEffect(name) {
 }
 
 /**
- * 算法核心：判斷是否有解
+ * 判斷是否有解
  */
 function canSolve(nums) {
     if (nums.length === 1) return Math.abs(nums[0] - 24) < 1e-6;
