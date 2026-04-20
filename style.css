@@ -31,11 +31,11 @@ body {
 }
 
 /* =========================================
-   2. 狀態列與計時器 (核心更新：防止版面抖動)
+   2. 狀態列 (HP, 分數, 關卡)
    ========================================= */
 header {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
     font-size: 1rem;
     margin-bottom: 15px;
@@ -52,67 +52,50 @@ header {
     white-space: nowrap;
 }
 
-/* 解決版面抖動的關鍵樣式 */
-#timer {
-    display: inline-block;
-    min-width: 2.5rem;      /* 固定寬度，確保 120 與 9 佔用空間一致 */
-    text-align: center;     /* 數字置中 */
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace; /* 強制等寬字體 */
-    font-variant-numeric: tabular-nums; /* 確保數字寬度一致 */
-    transition: color 0.3s ease;
-    margin: 0 2px;
-}
-
 /* =========================================
-   3. 按鈕外觀統一設定
+   3. 戰鬥區域佈局 (時間 + 怪物)
    ========================================= */
-button, .key, .close-btn, .btn-modal-next {
-    font-family: inherit;
-    font-weight: bold;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.1s ease;
-    display: inline-flex;
+.battle-container {
+    display: flex;
+    justify-content: space-around;
     align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    text-shadow: 1px 1px 0px rgba(0,0,0,0.2);
-    position: relative;
-    top: 0;
-    box-shadow: 0 5px 0 rgba(0,0,0,0.3);
+    margin: 10px 0;
+    min-height: 120px;
 }
 
-button:active, .key:active, .close-btn:active, .btn-modal-next:active {
-    top: 3px;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.3) !important;
+/* 時間顯示區塊 (位於左側) */
+.side-timer-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+    padding: 10px 5px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
 }
 
-/* =========================================
-   4. 虛擬鍵盤專用設定
-   ========================================= */
-.keyboard {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin: 15px auto;
-    width: 100%;
+#timer-label {
+    font-size: 0.75rem;
+    color: #bdc3c7;
+    margin-bottom: 5px;
+    font-weight: bold;
 }
 
-.keyboard button {
-    height: 55px;
-    width: 100%;
-    font-size: 1.2rem;
+/* 固定寬度等寬字體計時器，防止數字跳動 */
+#timer {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 1.8rem;
+    font-weight: bold;
+    min-width: 3rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s ease;
 }
 
-.key { background: #ecf0f1; color: #2c3e50; }
-.key-op { background: #3498db; color: white; }
-.key-del { background: #95a5a6; color: white; }
-
-/* =========================================
-   5. 怪物與數字卡片
-   ========================================= */
-#monster-box {
+/* 怪物區域 (置中) */
+.monster-area {
+    flex: 1.5;
     height: 100px;
     display: flex;
     justify-content: center;
@@ -124,6 +107,14 @@ button:active, .key:active, .close-btn:active, .btn-modal-next:active {
     animation: bounce 2s infinite;
 }
 
+/* 右側平衡佔位符 */
+.side-placeholder {
+    flex: 1;
+}
+
+/* =========================================
+   4. 數字卡片與輸入區
+   ========================================= */
 .card-container {
     display: flex;
     justify-content: center;
@@ -144,12 +135,9 @@ button:active, .key:active, .close-btn:active, .btn-modal-next:active {
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
-/* =========================================
-   6. 輸入框與動作按鈕
-   ========================================= */
 input {
-    width: 80%;
-    max-width: 300px;
+    width: 85%;
+    max-width: 320px;
     margin: 0 auto 15px auto;
     padding: 14px;
     border-radius: 10px;
@@ -162,6 +150,46 @@ input {
     outline: none;
 }
 
+/* =========================================
+   5. 虛擬鍵盤與按鈕
+   ========================================= */
+.keyboard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 15px auto;
+    width: 100%;
+}
+
+.keyboard button {
+    height: 55px;
+    font-size: 1.2rem;
+}
+
+button, .key, .btn-modal-next {
+    font-family: inherit;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.3);
+    position: relative;
+    top: 0;
+}
+
+button:active, .key:active {
+    top: 3px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.3) !important;
+}
+
+.key { background: #ecf0f1; color: #2c3e50; }
+.key-op { background: #3498db; color: white; }
+.key-del { background: #95a5a6; color: white; }
+
 .button-group {
     display: flex;
     justify-content: center;
@@ -170,7 +198,6 @@ input {
 
 .button-group button {
     height: 60px;
-    font-size: 1.2rem;
     flex: 1;
     max-width: 160px;
 }
@@ -179,7 +206,7 @@ input {
 .btn-no-solution { background: #9b59b6; color: white; }
 
 /* =========================================
-   7. 彈出式視窗
+   6. 彈出視窗與特效
    ========================================= */
 .modal {
     display: none;
@@ -218,16 +245,11 @@ input {
     color: white;
     height: 60px;
     width: 100%;
-    font-size: 1.3rem;
 }
 
-/* =========================================
-   8. 特效動畫
-   ========================================= */
 .message { min-height: 1.2em; margin-top: 10px; font-weight: bold; }
 
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
 .shake { animation: shake-animation 0.5s ease-in-out; }
 @keyframes shake-animation {
     0%, 100% { transform: translate(0, 0); }
