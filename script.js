@@ -2,7 +2,7 @@ let currentNums = [];
 let hp = 3;
 let level = 1;
 let score = 0;
-let timeLeft = 90; // 起始時間微調為 90 秒
+let timeLeft = 90; // 起始時間 90 秒
 let timerInterval;
 
 const MAX_TIME = 120; // 時間上限
@@ -28,6 +28,7 @@ function pressKey(val) {
 
 /**
  * 初始化新遊戲 (換關)
+ * 注意：生存模式下不重置 timeLeft
  */
 function newGame() {
     // 關閉視窗與重置輸入狀態
@@ -36,7 +37,7 @@ function newGame() {
     document.getElementById('user-input').value = '';
     document.getElementById('feedback').innerText = '';
 
-    // 啟動計時器 (僅在第一關啟動)
+    // 啟動計時器 (僅在遊戲第一次啟動時執行)
     if (!timerInterval) {
         startTimer();
     }
@@ -72,6 +73,9 @@ function newGame() {
         key.onclick = () => pressKey(n.toString());
         keyContainer.appendChild(key);
     });
+    
+    // 同步更新一次顯示，確保顏色正確
+    updateTimerDisplay();
 }
 
 /**
@@ -119,13 +123,13 @@ function checkNoSolution() {
 }
 
 /**
- * 答對處理 (生存獎勵)
+ * 答對處理 (生存獎勵加秒)
  */
 function handleSuccess(isNoSolutionChallenge) {
-    // 難度曲線獎勵
+    // 難度曲線獎勵：Level 1-10 加 20秒，之後加 15秒
     let addTime = (level <= 10) ? 20 : 15;
     
-    // 無解題額外獎勵
+    // 無解題額外獎勵：加 5-10 秒 (此處採納建議定為 +10s)
     if (isNoSolutionChallenge) {
         addTime += 10;
     }
@@ -137,6 +141,7 @@ function handleSuccess(isNoSolutionChallenge) {
     document.getElementById('score').innerText = score;
     document.getElementById('level').innerText = level;
     
+    updateTimerDisplay(); // 立即更新時間顯示
     triggerEffect('shake');
     showResultModal(true, isNoSolutionChallenge ? 
         `洞察正確！成功識破怪物的幻覺，時間大幅增加 ${addTime}s！` : 
@@ -144,7 +149,7 @@ function handleSuccess(isNoSolutionChallenge) {
 }
 
 /**
- * 答錯處理 (扣時 + 換題)
+ * 答錯處理 (扣時 -10s + 換題)
  */
 function handleWrongAnswer(msg) {
     timeLeft = Math.max(0, timeLeft - 10); // 罰扣 10 秒
@@ -163,9 +168,9 @@ function reduceHP(isTimeOut, msg = "") {
     if (hp <= 0 || (isTimeOut && timeLeft <= 0)) {
         clearInterval(timerInterval);
         alert(`💀 冒險結束！勇者在第 ${level} 關倒下了。\n最終得分：${score}`);
-        location.reload(); // 重新開始
+        location.reload(); 
     } else {
-        // A模式：答錯直接換題
+        // 生存模式規則：答錯直接換題
         let failMsg = isTimeOut ? 
             "⏰ 時間耗盡！勇者露出了破綻，受到 1 點傷害並換題。" : 
             `💥 ${msg}！受到反擊扣除 10s 與 1 點 HP，強制進入下一場戰鬥。`;
@@ -174,7 +179,7 @@ function reduceHP(isTimeOut, msg = "") {
 }
 
 /**
- * 生存計時器
+ * 生存計時器核心
  */
 function startTimer() {
     timerInterval = setInterval(() => {
@@ -188,11 +193,17 @@ function startTimer() {
     }, 1000);
 }
 
+/**
+ * 更新計時器顯示與顏色
+ * 配合 CSS 的 min-width 與 tabular-nums 可防止版面跳動
+ */
 function updateTimerDisplay() {
     const timerEl = document.getElementById('timer');
+    if (!timerEl) return;
+    
     timerEl.innerText = timeLeft;
 
-    // 視覺顏色變化：綠 -> 黃 -> 紅
+    // 視覺顏色變化：綠 (>40) -> 黃 (16-40) -> 紅 (<=15)
     if (timeLeft > 40) {
         timerEl.style.color = "#2ecc71";
     } else if (timeLeft > 15) {
@@ -203,7 +214,7 @@ function updateTimerDisplay() {
 }
 
 /**
- * 結果彈窗
+ * 結果彈窗 (隱藏關閉按鈕，強制玩家點擊「進入下一場」)
  */
 function showResultModal(isSuccess, message) {
     const modal = document.getElementById('solution-modal');
@@ -226,11 +237,10 @@ function showResultModal(isSuccess, message) {
     }
 
     modal.style.display = 'block';
-    modal.onclick = () => {}; // 禁止點擊背景關閉
 }
 
 /**
- * 暴力搜索解法
+ * 暴力搜索解法 (用於提供參考答案)
  */
 function findAllSolutions(nums) {
     let res = new Set();
@@ -255,12 +265,14 @@ function findAllSolutions(nums) {
 }
 
 /**
- * 視覺效果
+ * 怪物視覺效果
  */
 function triggerEffect(name) {
     const box = document.getElementById('monster-box');
-    box.classList.add(name);
-    setTimeout(() => box.classList.remove(name), 500);
+    if (box) {
+        box.classList.add(name);
+        setTimeout(() => box.classList.remove(name), 500);
+    }
 }
 
 /**
