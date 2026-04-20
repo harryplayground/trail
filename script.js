@@ -16,6 +16,40 @@ function closeModal() {
 }
 
 /**
+ * 顯示結果彈窗 (核心更新)
+ * @param {boolean} isSuccess 是否成功
+ * @param {string} message 顯示的訊息內容
+ */
+function showResultModal(isSuccess, message) {
+    const modal = document.getElementById('solution-modal');
+    const title = document.getElementById('modal-title');
+    const msgEl = document.getElementById('modal-msg');
+    const solutionSection = document.getElementById('solution-section');
+    const listContainer = document.getElementById('all-solutions-list');
+
+    // 停止計時與鎖定輸入
+    clearInterval(timerInterval);
+    document.getElementById('user-input').disabled = true;
+
+    // 設定標題與訊息
+    title.innerText = isSuccess ? "🎊 戰勝怪物！" : "💀 戰鬥失敗...";
+    title.style.color = isSuccess ? "#2ecc71" : "#e74c3c";
+    msgEl.innerText = message;
+
+    // 成功則隱藏解法清單，失敗則顯示解法
+    if (isSuccess) {
+        solutionSection.style.display = 'none';
+    } else {
+        solutionSection.style.display = 'block';
+        const allSolutions = findAllSolutions(currentNums);
+        listContainer.innerHTML = allSolutions.length > 0 ? 
+            allSolutions.map((s, i) => `<div>${i+1}. ${s}</div>`).join('') : "經鑑定，這題真的無解。";
+    }
+
+    modal.style.display = 'block';
+}
+
+/**
  * 虛擬鍵盤輸入處理
  */
 function pressKey(val) {
@@ -48,7 +82,6 @@ function newGame() {
     const numKeysContainer = document.getElementById('number-keys-container');
     const feedback = document.getElementById('feedback');
     const inputField = document.getElementById('user-input');
-    const nextBtn = document.getElementById('btn-next');
     
     // 初始化介面內容
     display.innerHTML = '';
@@ -56,7 +89,6 @@ function newGame() {
     feedback.innerText = '';
     inputField.value = '';
     inputField.disabled = false; 
-    if(nextBtn) nextBtn.style.display = 'none';
 
     // 隨機怪物圖標
     const monsterIcon = document.getElementById('monster-icon');
@@ -70,7 +102,6 @@ function newGame() {
     while (true) {
         let tempNums = [];
         for (let i = 0; i < 4; i++) tempNums.push(Math.floor(Math.random() * 13) + 1);
-        // 確保題目符合該模式的要求
         if (canSolve(tempNums) === !isNoSolutionMode) { 
             nums = tempNums; 
             break; 
@@ -81,32 +112,19 @@ function newGame() {
 
     // 生成題目卡片與虛擬鍵盤上的數字按鈕
     currentNums.forEach(n => {
-        // 1. 生成上方顯示卡片
         let card = document.createElement('div');
         card.className = 'number-card';
         card.innerText = n;
         display.appendChild(card);
 
-        // 2. 生成鍵盤數字按鈕 (確保樣式類別統一)
         if (numKeysContainer) {
             let key = document.createElement('button');
-            key.className = 'key'; // 這裡必須與 CSS 中的 .key 樣式一致
+            key.className = 'key'; 
             key.innerText = n;
             key.onclick = () => pressKey(n.toString());
             numKeysContainer.appendChild(key);
         }
     });
-}
-
-/**
- * 鎖定輸入並顯示下一關按鈕
- */
-function showNextButton() {
-    clearInterval(timerInterval); 
-    const nextBtn = document.getElementById('btn-next');
-    const inputField = document.getElementById('user-input');
-    if(nextBtn) nextBtn.style.display = 'inline-block';
-    if(inputField) inputField.disabled = true; 
 }
 
 /**
@@ -117,13 +135,11 @@ function checkAnswer() {
     let rawInput = document.getElementById('user-input').value.trim();
     if (!rawInput) return;
 
-    // 格式化符號以便進行 JavaScript 運算
     let processedInput = rawInput
         .replace(/（/g, '(').replace(/）/g, ')')
         .replace(/x|×|X/g, '*').replace(/÷/g, '/');
 
     try {
-        // 驗證數字使用是否正確
         let usedNums = (processedInput.match(/\d+/g) || []).map(Number).sort((a,b)=>a-b);
         let goalNums = [...currentNums].sort((a, b) => a - b);
 
@@ -133,18 +149,17 @@ function checkAnswer() {
             return;
         }
 
-        // 計算公式結果
         let result = new Function(`return ${processedInput}`)();
 
         if (Math.abs(result - 24) < 1e-6) {
             triggerEffect('shake');
-            score += (10 + timeLeft);
+            let bonus = 10 + timeLeft;
+            score += bonus;
             document.getElementById('score').innerText = score;
-            feedback.style.color = "#2ecc71";
-            feedback.innerText = `💥 完美一擊！結果是 24！(+${10 + timeLeft}分)`;
             level++;
             document.getElementById('level').innerText = level;
-            showNextButton();
+            
+            showResultModal(true, `完美的攻擊！結果是 24！獲得了 ${bonus} 分。`);
         } else {
             handleWrongAnswer(`計算結果是 ${result.toFixed(1)}`);
         }
@@ -163,29 +178,18 @@ function handleWrongAnswer(msg) {
     if (retryCount < 1) {
         retryCount++;
         feedback.style.color = "#f1c40f";
-        feedback.innerText = `⚠️ ${msg}，你有最後一次補答機會！`;
+        feedback.innerText = `⚠️ ${msg}，還有最後一次補答機會！`;
     } else {
         triggerEffect('flash');
-        feedback.style.color = "#e74c3c";
-        feedback.innerText = `❌ ${msg}，挑戰失敗！`;
-        
-        // 補答失敗，查詢所有可能的解法並顯示彈窗
-        const allSolutions = findAllSolutions(currentNums);
-        const listContainer = document.getElementById('all-solutions-list');
-        
-        if (allSolutions.length > 0) {
-            listContainer.innerHTML = allSolutions.map((s, i) => `<div>${i+1}. ${s}</div>`).join('');
-        } else {
-            listContainer.innerHTML = "經鑑定，這組數字真的無法湊成 24。";
+        reduceHP(); // 內部會判斷 HP 是否歸零
+        if (hp > 0) {
+            showResultModal(false, `${msg}。你受到了怪物的反擊！`);
         }
-        
-        document.getElementById('solution-modal').style.display = 'block';
-        reduceHP();
     }
 }
 
 /**
- * 暴力搜索所有計法 (顯示於彈窗)
+ * 暴力搜索所有計法
  */
 function findAllSolutions(nums) {
     let solutions = new Set();
@@ -210,7 +214,6 @@ function findAllSolutions(nums) {
         }
     };
     generate(nums.map(n => ({ val: n, str: n.toString() })));
-    // 清理最外層多餘括號，並限制顯示前 6 組
     return Array.from(solutions).map(s => s.replace(/^\((.*)\)$/, '$1')).slice(0, 6);
 }
 
@@ -221,12 +224,12 @@ function reduceHP() {
     hp--;
     document.getElementById('hp').innerText = hp;
     if (hp <= 0) {
+        clearInterval(timerInterval);
         alert(`💀 勇者倒下了！最終得分：${score}`);
         hp = 3; level = 1; score = 0;
         document.getElementById('score').innerText = score;
+        document.getElementById('hp').innerText = hp;
         newGame();
-    } else {
-        showNextButton();
     }
 }
 
@@ -238,11 +241,9 @@ function checkNoSolution() {
         triggerEffect('shake');
         score += 20;
         document.getElementById('score').innerText = score;
-        document.getElementById('feedback').style.color = "#2ecc71";
-        document.getElementById('feedback').innerText = "🎯 洞察力驚人！這題的確無解。";
         level++;
         document.getElementById('level').innerText = level;
-        showNextButton();
+        showResultModal(true, "洞察正確！這題真的無解。你成功識破了怪物的幻覺！(+20分)");
     } else {
         handleWrongAnswer("這題其實是有解法的喔！");
     }
@@ -271,6 +272,9 @@ function startTimer() {
             triggerEffect('flash');
             document.getElementById('feedback').innerText = "⏰ 時間耗盡！";
             reduceHP();
+            if (hp > 0) {
+                showResultModal(false, "時間太久了，勇者露出了破綻！");
+            }
         }
     }, 1000);
 }
