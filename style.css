@@ -32,7 +32,31 @@ body {
 }
 
 /* =========================================
-   2. 按鈕外觀統一設定 (核心更新)
+   2. 狀態列與計時器 (生存模式優化)
+   ========================================= */
+header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    background: rgba(0,0,0,0.3);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.stat {
+    font-weight: bold;
+}
+
+/* 確保計時器在時間少於 15 秒時有明顯的提醒感 */
+#timer {
+    transition: color 0.3s ease, transform 0.3s ease;
+    display: inline-block;
+}
+
+/* =========================================
+   3. 按鈕外觀統一設定 (核心更新)
    ========================================= */
 button, .key, .close-btn, .btn-modal-next {
     font-family: inherit;
@@ -57,7 +81,7 @@ button:active, .key:active, .close-btn:active, .btn-modal-next:active {
 }
 
 /* =========================================
-   3. 虛擬鍵盤專用設定
+   4. 虛擬鍵盤專用設定
    ========================================= */
 .keyboard {
     display: grid;
@@ -79,16 +103,13 @@ button:active, .key:active, .close-btn:active, .btn-modal-next:active {
 .key-del { background: #95a5a6; color: white; }
 
 /* =========================================
-   4. 狀態列、怪物與卡片
+   5. 怪物與數字卡片
    ========================================= */
-header {
+#monster-box {
+    height: 100px;
     display: flex;
-    justify-content: space-between;
-    font-size: 1rem;
-    margin-bottom: 15px;
-    background: rgba(0,0,0,0.2);
-    padding: 10px;
-    border-radius: 8px;
+    justify-content: center;
+    align-items: center;
 }
 
 .monster-sprite {
@@ -119,41 +140,41 @@ header {
 }
 
 /* =========================================
-   5. 輸入框與下方動作按鈕 (加大並收窄行距)
+   6. 輸入框與下方動作按鈕 (寬度縮小且居中)
    ========================================= */
 input {
-    width: 85%;          /* 從 100% 縮小到 85% */
-    max-width: 320px;    /* 設定最大寬度，避免在平板上太長 */
-    margin: 0 auto 10px auto; /* 居中顯示 */
-    padding: 12px;
-    border-radius: 8px;
+    width: 80%;          /* 縮小寬度使其在視覺上更精緻 */
+    max-width: 300px;    
+    margin: 0 auto 15px auto; 
+    padding: 14px;
+    border-radius: 10px;
     border: 3px solid #7f8c8d;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     text-align: center;
     background-color: #ecf0f1;
     color: #2c3e50;
-    display: block;      /* 確保居中生效 */
+    display: block;      
+    outline: none;
 }
 
 .button-group {
     display: flex;
     justify-content: center;
     gap: 12px;
-    margin-top: 5px;
 }
 
 .button-group button {
-    height: 60px;    /* 加大高度 */
-    font-size: 1.3rem;
+    height: 60px;    
+    font-size: 1.2rem;
     flex: 1;
-    max-width: 180px;
+    max-width: 160px;
 }
 
 .btn-attack { background: #e74c3c; color: white; }
 .btn-no-solution { background: #9b59b6; color: white; }
 
 /* =========================================
-   6. 彈出式視窗 (新增彈窗內按鈕樣式)
+   7. 彈出式視窗 (生存模式版本)
    ========================================= */
 .modal {
     display: none;
@@ -167,54 +188,68 @@ input {
 
 .modal-content {
     background-color: #34495e;
-    margin: 10vh auto;
+    margin: 12vh auto;
     padding: 25px;
     border: 4px solid #f1c40f;
     width: 85%;
-    max-width: 380px;
+    max-width: 360px;
     border-radius: 15px;
     text-align: center;
-    color: white;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+#modal-title {
+    margin-top: 0;
+    font-size: 1.8rem;
+}
+
+#modal-msg {
+    line-height: 1.6;
+    margin-bottom: 20px;
 }
 
 .solutions-list {
     text-align: left;
-    background: rgba(0,0,0,0.3);
-    padding: 15px;
+    background: rgba(0,0,0,0.4);
+    padding: 12px;
     border-radius: 8px;
     margin: 15px 0;
     font-family: 'Courier New', monospace;
     font-size: 1.1rem;
     color: #f1c40f;
-    line-height: 1.6;
-}
-
-.modal-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 20px;
 }
 
 .btn-modal-next {
     background: #27ae60;
     color: white;
-    height: 55px;
+    height: 60px;
     width: 100%;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
 }
 
 .close-btn {
-    display: none !important;
+    display: none !important; /* 強制移除關閉提示按鈕 */
 }
 
 /* =========================================
-   7. 訊息與動畫
+   8. 訊息與特效動畫
    ========================================= */
+.message {
+    min-height: 1.2em;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
 .shake { animation: shake-animation 0.5s ease-in-out; }
 @keyframes shake-animation {
     0%, 100% { transform: translate(0, 0); }
     10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 0); }
     20%, 40%, 60%, 80% { transform: translate(5px, 0); }
+}
+
+.flash { animation: flash-bg 0.4s ease; }
+@keyframes flash-bg {
+    50% { background-color: #c0392b; }
 }
