@@ -2,58 +2,11 @@ let currentNums = [];
 let hp = 3;
 let level = 1;
 let score = 0;
-let timeLeft = 75;
+let timeLeft = 90; // 起始時間微調為 90 秒
 let timerInterval;
-let retryCount = 0;
 
+const MAX_TIME = 120; // 時間上限
 const monsters = ['👾', '👹', '🐲', '🌵', '👻', '🐙', '🧟', '🐺', '🐝', '👽', '🧛'];
-
-/**
- * 彈出式視窗控制 (僅供內部開啟/關閉)
- */
-function closeModal() {
-    document.getElementById('solution-modal').style.display = 'none';
-}
-
-/**
- * 顯示結果彈窗 (核心更新：強制性)
- * @param {boolean} isSuccess 是否成功
- * @param {string} message 顯示的訊息內容
- */
-function showResultModal(isSuccess, message) {
-    const modal = document.getElementById('solution-modal');
-    const title = document.getElementById('modal-title');
-    const msgEl = document.getElementById('modal-msg');
-    const solutionSection = document.getElementById('solution-section');
-    const listContainer = document.getElementById('all-solutions-list');
-
-    // 停止計時與鎖定輸入
-    clearInterval(timerInterval);
-    document.getElementById('user-input').disabled = true;
-
-    // 設定標題與訊息內容
-    title.innerText = isSuccess ? "🎊 戰勝怪物！" : "💀 戰鬥失敗...";
-    title.style.color = isSuccess ? "#2ecc71" : "#e74c3c";
-    msgEl.innerText = message;
-
-    // 成功則隱藏解法清單，失敗則顯示解法
-    if (isSuccess) {
-        solutionSection.style.display = 'none';
-    } else {
-        solutionSection.style.display = 'block';
-        const allSolutions = findAllSolutions(currentNums);
-        listContainer.innerHTML = allSolutions.length > 0 ? 
-            allSolutions.map((s, i) => `<div>${i+1}. ${s}</div>`).join('') : "經鑑定，這題真的無解。";
-    }
-
-    // 顯示視窗
-    modal.style.display = 'block';
-
-    // 強制機制：禁用點擊背景關閉視窗，玩家必須點擊按鈕
-    modal.onclick = function(event) {
-        // 不執行任何關閉動作
-    };
-}
 
 /**
  * 虛擬鍵盤輸入處理
@@ -74,62 +27,50 @@ function pressKey(val) {
 }
 
 /**
- * 初始化新遊戲 (進入下一關時呼叫)
+ * 初始化新遊戲 (換關)
  */
 function newGame() {
-    closeModal(); // 清除之前的彈窗
-    clearInterval(timerInterval);
-    timeLeft = 75;
-    updateTimerDisplay();
-    startTimer();
+    // 關閉視窗與重置輸入狀態
+    document.getElementById('solution-modal').style.display = 'none';
+    document.getElementById('user-input').disabled = false;
+    document.getElementById('user-input').value = '';
+    document.getElementById('feedback').innerText = '';
 
-    retryCount = 0;
-    const display = document.getElementById('number-display');
-    const numKeysContainer = document.getElementById('number-keys-container');
-    const feedback = document.getElementById('feedback');
-    const inputField = document.getElementById('user-input');
-    
-    // 初始化介面內容
-    display.innerHTML = '';
-    if (numKeysContainer) numKeysContainer.innerHTML = '';
-    feedback.innerText = '';
-    inputField.value = '';
-    inputField.disabled = false; 
-
-    // 隨機怪物圖標
-    const monsterIcon = document.getElementById('monster-icon');
-    if (monsterIcon) {
-        monsterIcon.innerText = monsters[Math.floor(Math.random() * monsters.length)];
+    // 啟動計時器 (僅在第一關啟動)
+    if (!timerInterval) {
+        startTimer();
     }
 
-    // 生成題目邏輯 (20% 機率進入無解模式)
-    let nums = [];
+    // 生成題目 (20% 機率出現無解)
     let isNoSolutionMode = Math.random() < 0.2;
     while (true) {
-        let tempNums = [];
-        for (let i = 0; i < 4; i++) tempNums.push(Math.floor(Math.random() * 13) + 1);
-        if (canSolve(tempNums) === !isNoSolutionMode) { 
-            nums = tempNums; 
-            break; 
+        let tempNums = Array.from({ length: 4 }, () => Math.floor(Math.random() * 13) + 1);
+        if (canSolve(tempNums) === !isNoSolutionMode) {
+            currentNums = tempNums;
+            break;
         }
     }
 
-    currentNums = nums;
+    // 更新怪物圖標
+    document.getElementById('monster-icon').innerText = monsters[Math.floor(Math.random() * monsters.length)];
 
-    // 生成題目卡片與虛擬鍵盤上的數字按鈕
+    // 生成題目卡片與數字按鈕
+    const display = document.getElementById('number-display');
+    const keyContainer = document.getElementById('number-keys-container');
+    display.innerHTML = '';
+    keyContainer.innerHTML = '';
+
     currentNums.forEach(n => {
         let card = document.createElement('div');
         card.className = 'number-card';
         card.innerText = n;
         display.appendChild(card);
 
-        if (numKeysContainer) {
-            let key = document.createElement('button');
-            key.className = 'key'; 
-            key.innerText = n;
-            key.onclick = () => pressKey(n.toString());
-            numKeysContainer.appendChild(key);
-        }
+        let key = document.createElement('button');
+        key.className = 'key';
+        key.innerText = n;
+        key.onclick = () => pressKey(n.toString());
+        keyContainer.appendChild(key);
     });
 }
 
@@ -141,174 +82,198 @@ function checkAnswer() {
     let rawInput = document.getElementById('user-input').value.trim();
     if (!rawInput) return;
 
-    let processedInput = rawInput
-        .replace(/（/g, '(').replace(/）/g, ')')
-        .replace(/x|×|X/g, '*').replace(/÷/g, '/');
+    let processed = rawInput.replace(/x|×|X/g, '*').replace(/÷/g, '/');
 
     try {
-        let usedNums = (processedInput.match(/\d+/g) || []).map(Number).sort((a,b)=>a-b);
-        let goalNums = [...currentNums].sort((a, b) => a - b);
+        let used = (processed.match(/\d+/g) || []).map(Number).sort((a, b) => a - b);
+        let goal = [...currentNums].sort((a, b) => a - b);
 
-        if (JSON.stringify(usedNums) !== JSON.stringify(goalNums)) {
+        if (JSON.stringify(used) !== JSON.stringify(goal)) {
             feedback.style.color = "#f1c40f";
             feedback.innerText = "❌ 必須使用且只使用這 4 個數字喔！";
             return;
         }
 
-        let result = new Function(`return ${processedInput}`)();
+        let result = new Function(`return ${processed}`)();
 
         if (Math.abs(result - 24) < 1e-6) {
-            triggerEffect('shake');
-            let bonus = 10 + timeLeft;
-            score += bonus;
-            document.getElementById('score').innerText = score;
-            level++;
-            document.getElementById('level').innerText = level;
-            
-            showResultModal(true, `完美的攻擊！結果是 24！獲得了 ${bonus} 分。`);
+            handleSuccess(false); // 成功答題
         } else {
-            handleWrongAnswer(`計算結果是 ${result.toFixed(1)}`);
+            handleWrongAnswer(`結果是 ${result.toFixed(1)}`);
         }
     } catch (e) {
         feedback.style.color = "#f1c40f";
-        feedback.innerText = "❓ 格式錯誤 ( 請檢查括號或運算符 )";
+        feedback.innerText = "❓ 格式錯誤";
     }
 }
 
 /**
- * 錯誤處理與補答機制
- */
-function handleWrongAnswer(msg) {
-    const feedback = document.getElementById('feedback');
-
-    if (retryCount < 1) {
-        retryCount++;
-        feedback.style.color = "#f1c40f";
-        feedback.innerText = `⚠️ ${msg}，還有最後一次補答機會！`;
-    } else {
-        triggerEffect('flash');
-        reduceHP(); 
-        if (hp > 0) {
-            showResultModal(false, `${msg}。你受到了怪物的反擊！`);
-        }
-    }
-}
-
-/**
- * 暴力搜索所有計法
- */
-function findAllSolutions(nums) {
-    let solutions = new Set();
-    const generate = (arr) => {
-        if (arr.length === 1) {
-            if (Math.abs(arr[0].val - 24) < 1e-6) solutions.add(arr[0].str);
-            return;
-        }
-        for (let i = 0; i < arr.length; i++) {
-            for (let j = 0; j < arr.length; j++) {
-                if (i === j) continue;
-                let nextArr = arr.filter((_, idx) => idx !== i && idx !== j);
-                let a = arr[i], b = arr[j];
-                let ops = [
-                    { val: a.val + b.val, str: `(${a.str}+${b.str})` },
-                    { val: a.val - b.val, str: `(${a.str}-${b.str})` },
-                    { val: a.val * b.val, str: `(${a.str}×${b.str})` }
-                ];
-                if (b.val !== 0) ops.push({ val: a.val / b.val, str: `(${a.str}÷${b.str})` });
-                for (let res of ops) generate([...nextArr, res]);
-            }
-        }
-    };
-    generate(nums.map(n => ({ val: n, str: n.toString() })));
-    return Array.from(solutions).map(s => s.replace(/^\((.*)\)$/, '$1')).slice(0, 6);
-}
-
-/**
- * 扣除 HP 與結束重置
- */
-function reduceHP() {
-    hp--;
-    document.getElementById('hp').innerText = hp;
-    if (hp <= 0) {
-        clearInterval(timerInterval);
-        alert(`💀 勇者倒下了！最終得分：${score}`);
-        // 回到第一關
-        hp = 3; level = 1; score = 0;
-        document.getElementById('score').innerText = score;
-        document.getElementById('hp').innerText = hp;
-        document.getElementById('level').innerText = level;
-        newGame(); // 這裡會自動關閉視窗並重啟新局
-    }
-}
-
-/**
- * 點擊「無解」按鈕的判斷邏輯
+ * 點擊「無解」判斷
  */
 function checkNoSolution() {
     if (!canSolve(currentNums)) {
-        triggerEffect('shake');
-        score += 20;
-        document.getElementById('score').innerText = score;
-        level++;
-        document.getElementById('level').innerText = level;
-        showResultModal(true, "洞察正確！這題真的無解。你成功識破了怪物的幻覺！(+20分)");
+        handleSuccess(true); // 成功識破無解
     } else {
-        handleWrongAnswer("這題其實是有解法的喔！");
+        handleWrongAnswer("這題其實是有解法的！");
     }
 }
 
 /**
- * 視覺效果控制
+ * 答對處理 (生存獎勵)
  */
-function triggerEffect(className) {
-    const el = document.getElementById('monster-icon');
-    if (el) {
-        el.classList.add(className);
-        setTimeout(() => el.classList.remove(className), 500);
+function handleSuccess(isNoSolutionChallenge) {
+    // 難度曲線獎勵
+    let addTime = (level <= 10) ? 20 : 15;
+    
+    // 無解題額外獎勵
+    if (isNoSolutionChallenge) {
+        addTime += 10;
+    }
+
+    timeLeft = Math.min(timeLeft + addTime, MAX_TIME);
+    score += (100 * level);
+    level++;
+
+    document.getElementById('score').innerText = score;
+    document.getElementById('level').innerText = level;
+    
+    triggerEffect('shake');
+    showResultModal(true, isNoSolutionChallenge ? 
+        `洞察正確！成功識破怪物的幻覺，時間大幅增加 ${addTime}s！` : 
+        `完美的攻擊！時間增加了 ${addTime}s。`);
+}
+
+/**
+ * 答錯處理 (扣時 + 換題)
+ */
+function handleWrongAnswer(msg) {
+    timeLeft = Math.max(0, timeLeft - 10); // 罰扣 10 秒
+    updateTimerDisplay();
+    triggerEffect('flash');
+    reduceHP(false, msg);
+}
+
+/**
+ * 扣除 HP 與結束邏輯
+ */
+function reduceHP(isTimeOut, msg = "") {
+    hp--;
+    document.getElementById('hp').innerText = hp;
+
+    if (hp <= 0 || (isTimeOut && timeLeft <= 0)) {
+        clearInterval(timerInterval);
+        alert(`💀 冒險結束！勇者在第 ${level} 關倒下了。\n最終得分：${score}`);
+        location.reload(); // 重新開始
+    } else {
+        // A模式：答錯直接換題
+        let failMsg = isTimeOut ? 
+            "⏰ 時間耗盡！勇者露出了破綻，受到 1 點傷害並換題。" : 
+            `💥 ${msg}！受到反擊扣除 10s 與 1 點 HP，強制進入下一場戰鬥。`;
+        showResultModal(false, failMsg);
     }
 }
 
 /**
- * 計時器邏輯
+ * 生存計時器
  */
 function startTimer() {
     timerInterval = setInterval(() => {
         timeLeft--;
         updateTimerDisplay();
+        
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            triggerEffect('flash');
-            document.getElementById('feedback').innerText = "⏰ 時間耗盡！";
-            reduceHP();
-            if (hp > 0) {
-                showResultModal(false, "時間太久了，勇者露出了破綻！");
-            }
+            reduceHP(true);
         }
     }, 1000);
 }
 
 function updateTimerDisplay() {
     const timerEl = document.getElementById('timer');
-    if (timerEl) {
-        timerEl.innerText = timeLeft;
-        timerEl.style.color = timeLeft <= 10 ? "#e74c3c" : "#fff";
+    timerEl.innerText = timeLeft;
+
+    // 視覺顏色變化：綠 -> 黃 -> 紅
+    if (timeLeft > 40) {
+        timerEl.style.color = "#2ecc71";
+    } else if (timeLeft > 15) {
+        timerEl.style.color = "#f1c40f";
+    } else {
+        timerEl.style.color = "#e74c3c";
     }
 }
 
 /**
- * 底層算法：判斷題目是否有解
+ * 結果彈窗
  */
-function canSolve(nums, target = 24) {
-    if (nums.length === 1) return Math.abs(nums[0] - target) < 1e-6;
+function showResultModal(isSuccess, message) {
+    const modal = document.getElementById('solution-modal');
+    const title = document.getElementById('modal-title');
+    const msgEl = document.getElementById('modal-msg');
+    const solSection = document.getElementById('solution-section');
+
+    title.innerText = isSuccess ? "🎊 戰勝怪物！" : "💀 戰鬥失敗...";
+    title.style.color = isSuccess ? "#2ecc71" : "#e74c3c";
+    msgEl.innerText = message;
+    document.getElementById('user-input').disabled = true;
+
+    if (isSuccess) {
+        solSection.style.display = 'none';
+    } else {
+        solSection.style.display = 'block';
+        const solutions = findAllSolutions(currentNums);
+        document.getElementById('all-solutions-list').innerHTML = 
+            solutions.length > 0 ? solutions.map(s => `<div>${s}</div>`).join('') : "此題無解";
+    }
+
+    modal.style.display = 'block';
+    modal.onclick = () => {}; // 禁止點擊背景關閉
+}
+
+/**
+ * 暴力搜索解法
+ */
+function findAllSolutions(nums) {
+    let res = new Set();
+    const solve = (arr) => {
+        if (arr.length === 1) {
+            if (Math.abs(arr[0].val - 24) < 1e-6) res.add(arr[0].str);
+            return;
+        }
+        for (let i = 0; i < arr.length; i++) {
+            for (let j = 0; j < arr.length; j++) {
+                if (i === j) continue;
+                let a = arr[i], b = arr[j], next = arr.filter((_, k) => k !== i && k !== j);
+                solve([...next, { val: a.val + b.val, str: `(${a.str}+${b.str})` }]);
+                solve([...next, { val: a.val - b.val, str: `(${a.str}-${b.str})` }]);
+                solve([...next, { val: a.val * b.val, str: `(${a.str}×${b.str})` }]);
+                if (b.val !== 0) solve([...next, { val: a.val / b.val, str: `(${a.str}÷${b.str})` }]);
+            }
+        }
+    };
+    solve(nums.map(n => ({ val: n, str: n.toString() })));
+    return Array.from(res).slice(0, 3);
+}
+
+/**
+ * 視覺效果
+ */
+function triggerEffect(name) {
+    const box = document.getElementById('monster-box');
+    box.classList.add(name);
+    setTimeout(() => box.classList.remove(name), 500);
+}
+
+/**
+ * 算法核心：判斷是否有解
+ */
+function canSolve(nums) {
+    if (nums.length === 1) return Math.abs(nums[0] - 24) < 1e-6;
     for (let i = 0; i < nums.length; i++) {
         for (let j = 0; j < nums.length; j++) {
             if (i === j) continue;
-            let nextNums = nums.filter((_, idx) => idx !== i && idx !== j);
-            let ops = [nums[i]+nums[j], nums[i]-nums[j], nums[i]*nums[j]];
-            if (nums[j] !== 0) ops.push(nums[i]/nums[j]);
-            for (let res of ops) {
-                if (canSolve([...nextNums, res], target)) return true;
-            }
+            let a = nums[i], b = nums[j], next = nums.filter((_, k) => k !== i && k !== j);
+            if (canSolve([...next, a + b]) || canSolve([...next, a - b]) || 
+                canSolve([...next, a * b]) || (b !== 0 && canSolve([...next, a / b]))) return true;
         }
     }
     return false;
