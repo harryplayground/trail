@@ -3,14 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>數學冒險島：生存模式 24</title>
+    <title>數學冒險島：24 點雙模式</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="adventure-map">
+
+    <div id="start-menu" class="adventure-map">
+        <h1 style="color: #f1c40f; margin-bottom: 10px;">⚔️ 24 點大冒險</h1>
+        <p style="margin-bottom: 30px; color: #bdc3c7;">請選擇你的修練路徑</p>
+        
+        <button class="btn-mode survival" onclick="selectMode('survival')" style="width: 100%; margin-bottom: 20px; padding: 25px; border-radius: 15px; background: #c0392b; color: white; border: none; cursor: pointer; text-align: left;">
+            <h2 style="margin: 0;">🔥 進入冒險 (生存模式)</h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 0.9rem;">限時倒數、HP 限制、挑戰最高分！</p>
+        </button>
+
+        <button class="btn-mode practice" onclick="selectMode('practice')" style="width: 100%; padding: 25px; border-radius: 15px; background: #2980b9; color: white; border: none; cursor: pointer; text-align: left;">
+            <h2 style="margin: 0;">📖 學院修練 (練習模式)</h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 0.9rem;">正向計時、無限體力、提供導師提示。</p>
+        </button>
+    </div>
+
+    <div id="game-container" class="adventure-map" style="display: none; position: relative;">
+        <button id="btn-home" onclick="goHome()" style="position: absolute; top: -10px; left: 10px; padding: 5px 12px; background: #7f8c8d; color: white; border-radius: 8px; border: none; cursor: pointer; font-size: 0.8rem; z-index: 10;">🏠 返回選單</button>
+
         <header>
-            <div class="stat">❤️ HP: <span id="hp">3</span></div>
-            <div class="stat">🪙 分數: <span id="score">0</span></div>
+            <div class="stat" id="hp-stat">❤️ HP: <span id="hp">3</span></div>
+            <div class="stat" id="score-label">🪙 分數: <span id="score">0</span></div>
             <div class="stat">🚩 關卡: <span id="level">1</span></div>
         </header>
 
@@ -50,11 +68,16 @@
                 <button class="btn-attack" onclick="checkAnswer()">發動攻擊！</button>
                 <button class="btn-no-solution" onclick="checkNoSolution()">此題無解</button>
             </div>
+
+            <div id="practice-controls" class="button-group" style="display: none; margin-top: 12px; gap: 10px;">
+                <button class="btn-hint" onclick="showHint()" style="background: #f39c12; color: white; flex: 1; height: 50px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer;">💡 獲取提示</button>
+                <button class="btn-skip" onclick="newGame()" style="background: #7f8c8d; color: white; flex: 1; height: 50px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer;">⏭️ 跳過此題</button>
+            </div>
         </div>
 
         <p id="feedback" class="message"></p>
 
-        <p style="font-size: 0.8rem; color: #bdc3c7; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+        <p id="mode-tip" style="font-size: 0.8rem; color: #bdc3c7; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
             提示：答對增加秒數。勇者，在時間耗盡前擊敗更多敵人吧！
         </p>
     </div>
