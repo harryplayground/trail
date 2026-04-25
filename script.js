@@ -40,7 +40,7 @@ function selectMode(mode) {
     document.getElementById('score').innerText = score;
 
     if (gameMode === 'survival') {
-        timeLeft = 90;
+        timeLeft = 75;
         document.getElementById('hp-stat').style.display = 'block';
         document.getElementById('score-label').innerHTML = `🪙 分數: <span id="score">${score}</span>`;
         document.getElementById('practice-controls').style.display = 'none';
