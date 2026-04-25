@@ -1,13 +1,56 @@
+let gameMode = 'survival'; // 'survival' 或 'practice'
 let currentNums = [];
 let hp = 3;
 let level = 1;
 let score = 0;
-let timeLeft = 90; // 起始時間 90 秒
+let timeLeft = 90; 
 let timerInterval;
-let isPaused = false; // 控制計時器暫停的狀態開關
+let isPaused = false; 
 
-const MAX_TIME = 120; // 時間上限
+const MAX_TIME = 120; 
 const monsters = ['👾', '👹', '🐲', '🌵', '👻', '🐙', '🧟', '🐺', '🐝', '👽', '🧛'];
+const mentors = ['🧙‍♂️', '🤖', '🎓', '🦉', '💡'];
+
+/**
+ * 進入模式選擇
+ */
+function selectMode(mode) {
+    gameMode = mode;
+    document.getElementById('start-menu').style.display = 'none';
+    document.getElementById('game-container').style.display = 'flex';
+    
+    // 初始化數據
+    if (gameMode === 'survival') {
+        hp = 3;
+        level = 1;
+        score = 0;
+        timeLeft = 90;
+        document.getElementById('hp-stat').style.display = 'block';
+        document.getElementById('score-label').innerHTML = `🪙 分數: <span id="score">0</span>`;
+        document.getElementById('practice-controls').style.display = 'none';
+        document.getElementById('mode-tip').innerText = "提示：答對增加秒數。勇者，在時間耗盡前擊敗更多敵人吧！";
+    } else {
+        level = 1;
+        score = 0; // 練習模式用於計題數
+        timeLeft = 0; // 正計時從 0 開始
+        document.getElementById('hp-stat').style.display = 'none';
+        document.getElementById('score-label').innerHTML = `✅ 已完成: <span id="score">0</span>`;
+        document.getElementById('practice-controls').style.display = 'flex';
+        document.getElementById('mode-tip').innerText = "提示：練習模式沒有時間壓力。若卡住了，可以點擊「獲取提示」。";
+    }
+    
+    newGame();
+}
+
+/**
+ * 返回首頁選單
+ */
+function goHome() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('start-menu').style.display = 'flex';
+}
 
 /**
  * 虛擬鍵盤輸入處理
@@ -31,7 +74,6 @@ function pressKey(val) {
  * 初始化新遊戲 (換關)
  */
 function newGame() {
-    // 1. 恢復倒數與重置 UI 狀態
     isPaused = false; 
     document.getElementById('timer').classList.remove('timer-paused');
     document.getElementById('solution-modal').style.display = 'none';
@@ -39,10 +81,12 @@ function newGame() {
     document.getElementById('user-input').value = '';
     document.getElementById('feedback').innerText = '';
 
-    // 啟動計時器 (僅在遊戲第一次啟動時執行)
     if (!timerInterval) {
         startTimer();
     }
+
+    // 練習模式換題重置小計時，生存模式保持剩餘時間
+    if (gameMode === 'practice') timeLeft = 0;
 
     // 生成題目 (20% 機率出現無解)
     let isNoSolutionMode = Math.random() < 0.2;
@@ -54,8 +98,9 @@ function newGame() {
         }
     }
 
-    // 更新怪物圖標
-    document.getElementById('monster-icon').innerText = monsters[Math.floor(Math.random() * monsters.length)];
+    // 更新圖標：生存用怪物，練習用導師
+    const iconList = (gameMode === 'survival') ? monsters : mentors;
+    document.getElementById('monster-icon').innerText = iconList[Math.floor(Math.random() * iconList.length)];
 
     // 生成題目卡片與數字按鈕
     const display = document.getElementById('number-display');
@@ -124,41 +169,51 @@ function checkNoSolution() {
 }
 
 /**
- * 答對處理 (生存獎勵加秒)
+ * 答對處理
  */
 function handleSuccess(isNoSolutionChallenge) {
-    let addTime = (level <= 10) ? 20 : 15;
-    
-    if (isNoSolutionChallenge) {
-        addTime += 10; // 無解題額外獎勵
+    if (gameMode === 'survival') {
+        let addTime = (level <= 10) ? 20 : 15;
+        if (isNoSolutionChallenge) addTime += 10;
+        timeLeft = Math.min(timeLeft + addTime, MAX_TIME);
+        score += (100 * level);
+    } else {
+        score++; // 練習模式計算已完成題數
     }
 
-    timeLeft = Math.min(timeLeft + addTime, MAX_TIME);
-    score += (100 * level);
     level++;
-
     document.getElementById('score').innerText = score;
     document.getElementById('level').innerText = level;
     
     updateTimerDisplay(); 
     triggerEffect('shake');
-    showResultModal(true, isNoSolutionChallenge ? 
-        `洞察正確！成功識破怪物的幻覺，時間大幅增加 ${addTime}s！` : 
-        `完美的攻擊！時間增加了 ${addTime}s。`);
+    
+    let successMsg = gameMode === 'survival' ? 
+        (isNoSolutionChallenge ? `洞察正確！時間增加 ${addTime}s！` : `完美的攻擊！時間增加了 ${addTime}s。`) :
+        "太棒了！你成功解開了這道題。";
+        
+    showResultModal(true, successMsg);
 }
 
 /**
  * 答錯處理
  */
 function handleWrongAnswer(msg) {
-    timeLeft = Math.max(0, timeLeft - 10); 
-    updateTimerDisplay();
-    triggerEffect('flash');
-    reduceHP(false, msg);
+    if (gameMode === 'survival') {
+        timeLeft = Math.max(0, timeLeft - 10); 
+        updateTimerDisplay();
+        triggerEffect('flash');
+        reduceHP(false, msg);
+    } else {
+        // 練習模式不扣分，僅提示
+        document.getElementById('feedback').style.color = "#e74c3c";
+        document.getElementById('feedback').innerText = `❌ ${msg}，再試試看！`;
+        triggerEffect('flash');
+    }
 }
 
 /**
- * 扣除 HP 與結束邏輯
+ * 扣除 HP (生存模式專用)
  */
 function reduceHP(isTimeOut, msg = "") {
     hp--;
@@ -171,65 +226,84 @@ function reduceHP(isTimeOut, msg = "") {
     } else {
         let failMsg = isTimeOut ? 
             "⏰ 時間耗盡！勇者露出了破綻，受到 1 點傷害並換題。" : 
-            `💥 ${msg}！受到反擊扣除 10s 與 1 點 HP，強制更換關卡。`;
+            `💥 ${msg}！受到反擊扣除 10s 與 1 點 HP，強制換題。`;
         showResultModal(false, failMsg);
     }
 }
 
 /**
- * 生存計時器核心 (整合暫停功能)
+ * 計時器核心
  */
 function startTimer() {
     timerInterval = setInterval(() => {
-        if (isPaused) return; // 如果被鎖死暫停，就不往下跑
+        if (isPaused) return;
 
-        timeLeft--;
-        updateTimerDisplay();
-        
-        if (timeLeft <= 0) {
-            reduceHP(true);
+        if (gameMode === 'survival') {
+            timeLeft--;
+            if (timeLeft <= 0) reduceHP(true);
+        } else {
+            timeLeft++; // 練習模式正計時
         }
+        updateTimerDisplay();
     }, 1000);
 }
 
 /**
- * 更新計時器顯示與顏色
+ * 更新計時器顯示
  */
 function updateTimerDisplay() {
     const timerEl = document.getElementById('timer');
     if (!timerEl) return;
-    
     timerEl.innerText = timeLeft;
 
-    if (timeLeft > 40) {
-        timerEl.style.color = "#2ecc71";
-    } else if (timeLeft > 15) {
-        timerEl.style.color = "#f1c40f";
+    if (gameMode === 'survival') {
+        if (timeLeft > 40) timerEl.style.color = "#2ecc71";
+        else if (timeLeft > 15) timerEl.style.color = "#f1c40f";
+        else timerEl.style.color = "#e74c3c";
     } else {
-        timerEl.style.color = "#e74c3c";
+        timerEl.style.color = "#3498db";
     }
 }
 
 /**
- * 結果彈窗 (觸發暫停)
+ * 練習模式提示系統 (被動觸發)
+ */
+function showHint() {
+    const solutions = findAllSolutions(currentNums);
+    const feedback = document.getElementById('feedback');
+    if (solutions.length > 0) {
+        // 提取第一個括號內的運算作為第一步提示
+        const hintMatch = solutions[0].match(/\(([^()]+)\)/);
+        const firstStep = hintMatch ? hintMatch[1] : solutions[0].substring(0, 5);
+        feedback.style.color = "#f39c12";
+        feedback.innerText = `💡 導師提示：可以試著先計算 (${firstStep})`;
+    } else {
+        feedback.style.color = "#f39c12";
+        feedback.innerText = "💡 導師提示：這題真的沒有解法，試試點擊「此題無解」。";
+    }
+}
+
+/**
+ * 結果彈窗 (暫停計時)
  */
 function showResultModal(isSuccess, message) {
-    isPaused = true; // 鎖死時間倒數
-    document.getElementById('timer').classList.add('timer-paused'); // 加入 CSS 視覺鎖死效果
+    isPaused = true; 
+    document.getElementById('timer').classList.add('timer-paused');
 
     const modal = document.getElementById('solution-modal');
     const title = document.getElementById('modal-title');
     const msgEl = document.getElementById('modal-msg');
     const solSection = document.getElementById('solution-section');
 
-    title.innerText = isSuccess ? "🎊 戰勝怪物！" : "💀 戰鬥失敗...";
+    title.innerText = isSuccess ? "🎊 任務達成！" : "💀 戰鬥挫敗...";
     title.style.color = isSuccess ? "#2ecc71" : "#e74c3c";
     msgEl.innerText = message;
     document.getElementById('user-input').disabled = true;
 
-    if (isSuccess) {
+    if (isSuccess && gameMode === 'survival') {
         solSection.style.display = 'none';
     } else {
+        // 失敗或練習模式皆顯示答案
         solSection.style.display = 'block';
         const solutions = findAllSolutions(currentNums);
         document.getElementById('all-solutions-list').innerHTML = 
@@ -240,7 +314,7 @@ function showResultModal(isSuccess, message) {
 }
 
 /**
- * 暴力搜索解法 (用於提供參考答案)
+ * 暴力搜索解法 (保留)
  */
 function findAllSolutions(nums) {
     let res = new Set();
@@ -265,7 +339,7 @@ function findAllSolutions(nums) {
 }
 
 /**
- * 視覺效果
+ * 視覺特效
  */
 function triggerEffect(name) {
     const box = document.getElementById('monster-box');
@@ -276,7 +350,7 @@ function triggerEffect(name) {
 }
 
 /**
- * 判斷是否有解
+ * 判斷是否有解 (核心演算)
  */
 function canSolve(nums) {
     if (nums.length === 1) return Math.abs(nums[0] - 24) < 1e-6;
@@ -291,4 +365,4 @@ function canSolve(nums) {
     return false;
 }
 
-window.onload = newGame;
+// 啟動時不自動 newGame，待選擇模式後執行
