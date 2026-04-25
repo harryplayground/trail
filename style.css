@@ -92,7 +92,13 @@ header {
     min-width: 3.5rem;
     text-align: center;
     font-variant-numeric: tabular-nums;
-    transition: color 0.3s ease;
+    transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+/* 時間鎖死視覺效果 */
+.timer-paused {
+    color: #95a5a6 !important;
+    opacity: 0.5;
 }
 
 /* 怪物區域 */
@@ -155,7 +161,7 @@ input {
 }
 
 /* =========================================
-   5. 虛擬鍵盤與按鈕 (核心加大更新)
+   5. 虛擬鍵盤與按鈕
    ========================================= */
 .keyboard {
     display: grid;
@@ -194,7 +200,7 @@ button:active, .key:active {
 .key-op { background: #3498db; color: white; }
 .key-del { background: #95a5a6; color: white; }
 
-/* 加大後的動作按鈕 */
+/* 動作按鈕組 */
 .button-group {
     display: flex;
     justify-content: center;
@@ -202,14 +208,13 @@ button:active, .key:active {
 }
 
 .button-group button {
-    height: 70px;          /* 增加高度 */
-    font-size: 1.6rem;     /* 明顯加大字體 */
+    height: 70px;
+    font-size: 1.6rem;
     flex: 1;
     max-width: 180px;
-    letter-spacing: 2px;   /* 增加字距 */
+    letter-spacing: 2px;
 }
 
-/* 針對窄螢幕手機的適配 */
 @media (max-width: 400px) {
     .button-group button {
         font-size: 1.3rem;
@@ -220,6 +225,18 @@ button:active, .key:active {
 
 .btn-attack { background: #e74c3c; color: white; }
 .btn-no-solution { background: #9b59b6; color: white; }
+
+/* 模式選擇按鈕樣式提升 */
+.btn-mode {
+    transition: transform 0.2s ease, filter 0.2s ease !important;
+}
+.btn-mode:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+.btn-mode:active {
+    transform: translateY(3px) !important;
+}
 
 /* =========================================
    6. 彈出視窗與特效
@@ -266,7 +283,9 @@ button:active, .key:active {
 
 .message { min-height: 1.2em; margin-top: 10px; font-weight: bold; }
 
+/* 動畫效果 */
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
 .shake { animation: shake-animation 0.5s ease-in-out; }
 @keyframes shake-animation {
     0%, 100% { transform: translate(0, 0); }
