@@ -8,26 +8,30 @@
 </head>
 <body>
 
-    <div id="start-menu" class="adventure-map">
-        <h1 style="color: #f1c40f; margin-bottom: 10px;">⚔️ 24 點大冒險</h1>
-        <p style="margin-bottom: 30px; color: #bdc3c7;">請選擇你的修練路徑</p>
-        
-        <button class="btn-mode survival" onclick="selectMode('survival')" style="width: 100%; margin-bottom: 20px; padding: 20px; border-radius: 15px; background: #c0392b; color: white; border: none; cursor: pointer; text-align: left;">
+<div id="start-menu" class="adventure-map">
+    <h1 style="color: #f1c40f; margin-bottom: 10px; text-align: center;">⚔️ 24 點大冒險</h1>
+    <p style="margin-bottom: 30px; color: #bdc3c7; text-align: center;">請選擇你的修練路徑</p>
+    
+    <button class="btn-mode survival" onclick="selectMode('survival')" style="width: 100%; margin-bottom: 20px; padding: 20px; border-radius: 15px; background: #c0392b; color: white; border: none; cursor: pointer; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
             <div style="display: flex; align-items: baseline; gap: 8px;">
-                <h2 style="margin: 0; font-size: 1.4rem;">🔥 進入冒險</h2>
-                <span style="font-size: 1rem; opacity: 0.9;">(生存模式)</span>
+                <h2 style="margin: 0; font-size: 1.3rem; white-space: nowrap;">🔥 進入冒險</h2>
+                <span style="font-size: 0.9rem; opacity: 0.9; white-space: nowrap;">(生存模式)</span>
             </div>
-            <p style="margin: 8px 0 0 0; opacity: 0.8; font-size: 0.85rem; line-height: 1.4;">限時倒數、HP 限制、兩次更正機會、挑戰最高分！</p>
-        </button>
+            <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 0.8rem; flex-basis: 100%;">限時倒數、HP 限制、兩次更正機會</p>
+        </div>
+    </button>
 
-        <button class="btn-mode practice" onclick="selectMode('practice')" style="width: 100%; padding: 20px; border-radius: 15px; background: #2980b9; color: white; border: none; cursor: pointer; text-align: left;">
+    <button class="btn-mode practice" onclick="selectMode('practice')" style="width: 100%; padding: 20px; border-radius: 15px; background: #2980b9; color: white; border: none; cursor: pointer; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
             <div style="display: flex; align-items: baseline; gap: 8px;">
-                <h2 style="margin: 0; font-size: 1.4rem;">📖 學院修練</h2>
-                <span style="font-size: 1rem; opacity: 0.9;">(練習模式)</span>
+                <h2 style="margin: 0; font-size: 1.3rem; white-space: nowrap;">📖 學院修練</h2>
+                <span style="font-size: 0.9rem; opacity: 0.9; white-space: nowrap;">(練習模式)</span>
             </div>
-            <p style="margin: 8px 0 0 0; opacity: 0.8; font-size: 0.85rem; line-height: 1.4;">正向計時、無血量限制、提供導師提示。</p>
-        </button>
-    </div>
+            <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 0.8rem; flex-basis: 100%;">正向計時、無血量限制、導師提示</p>
+        </div>
+    </button>
+</div>
 
     <div id="game-container" class="adventure-map" style="display: none; position: relative;">
         <button id="btn-home" onclick="goHome()" style="position: absolute; top: -10px; left: 10px; padding: 5px 12px; background: #7f8c8d; color: white; border-radius: 8px; border: none; cursor: pointer; font-size: 0.8rem; z-index: 10;">🏠 返回選單</button>
