@@ -3,7 +3,7 @@ let currentNums = [];
 let hp = 3;
 let level = 1;
 let score = 0;
-let timeLeft = 90; 
+let timeLeft = 75; 
 let timerInterval;
 let isPaused = false; 
 let wrongCount = 0; // 新增：單題錯誤計數器
