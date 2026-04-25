@@ -25,10 +25,16 @@ function selectMode(mode) {
     wrongCount = 0; 
     isPaused = false;
 
+    // 清除舊的計時器防止累加
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
     document.getElementById('start-menu').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
     
-    // 更新 UI 文字顯示
+    // 強制更新 UI 文字顯示，確保畫面同步重置
     document.getElementById('level').innerText = level;
     document.getElementById('hp').innerText = hp;
     document.getElementById('score').innerText = score;
@@ -154,7 +160,7 @@ function checkAnswer() {
         let result = new Function(`return ${processed}`)();
 
         if (Math.abs(result - 24) < 1e-6) {
-            // --- 更新點 2：答對時清空反饋文字，避免殘留「格式錯誤」 (解決問題 2) ---
+            // --- 更新點 2：答對時清空反饋文字，確保進入下一題 (解決問題 2) ---
             feedback.innerText = "";
             handleSuccess(false); 
         } else {
@@ -206,7 +212,7 @@ function handleWrongAnswer(msg) {
     if (gameMode === 'survival') {
         wrongCount++;
         if (wrongCount < 2) {
-            // 第一次答錯：僅震動與提示，不扣血
+            // 第一次答錯：僅震動與提示，不扣血也不扣秒
             triggerEffect('shake');
             const feedback = document.getElementById('feedback');
             feedback.style.color = "#f1c40f";
@@ -297,7 +303,6 @@ function showResultModal(isSuccess, message) {
     msgEl.innerText = message;
     document.getElementById('user-input').disabled = true;
 
-    // 答對時隱藏解法區，答錯或練習模式顯示解法
     if (isSuccess && gameMode === 'survival') {
         solSection.style.display = 'none';
     } else {
