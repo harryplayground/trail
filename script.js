@@ -1,3 +1,39 @@
+/**
+ * 硬性禁止網頁縮放邏輯
+ */
+
+// 1. 禁止多點觸控縮放 (Pinch to zoom)
+document.addEventListener('touchstart', function (event) {
+    if (event.touches.length > 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
+
+// 2. 禁止快速雙擊縮放 (Double tap to zoom)
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
+
+// 3. 禁止電腦版鍵盤組合鍵縮放 (Ctrl + +/-/0)
+document.addEventListener('keydown', function (event) {
+    if ((event.ctrlKey || event.metaKey) && 
+        (event.key === '+' || event.key === '-' || event.key === '=' || event.key === '0')) {
+        event.preventDefault();
+    }
+});
+
+// 4. 禁止滑鼠滾輪縮放 (Ctrl + Scroll)
+document.addEventListener('wheel', function (event) {
+    if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+    }
+}, { passive: false });
+
 let gameMode = 'survival'; // 'survival' 或 'practice'
 let currentNums = [];
 let hp = 3;
